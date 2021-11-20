@@ -1,8 +1,7 @@
-# Python for Data Science
+# Data Science Tools in Python
 
-This project contains notebooks written while following the Udemy course
-Python for Data Sciene and Machine Learning Bootcamp (José Portilla), 
-and many additional courses, tutorials and books.
+This project contains notebooks written while following several web titorials and Udemy courses, such as the
+Python for Data Sciene and Machine Learning Bootcamp (José Portilla).
 
 Important related `howto` files of mine are:
 
