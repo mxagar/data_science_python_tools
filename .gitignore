@@ -6,5 +6,6 @@ python_finance
 my_output
 my_output.xlsx
 data/lending_club_loan_two.csv
+data/*
 example.mat
 environment.yml
