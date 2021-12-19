@@ -4,6 +4,6 @@ These notebooks were created after following the Udemy course
 
 by J.M. Portilla.
 
-Unfortunately, I have not found a direct repository to fork the course notebooks from, so I created my notebooks while coded along with the course videos.
+Unfortunately, I have not found a direct repository to fork the course notebooks from, so I created my notebooks while coding along with the course videos.
 
 No warranties.
