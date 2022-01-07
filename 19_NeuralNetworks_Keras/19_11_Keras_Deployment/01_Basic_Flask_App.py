@@ -18,4 +18,4 @@ if __name__ == '__main__':
 # How to run it:
 # - conda install -c anaconda flask
 # - python 01_Basic_Flask_App.py
-# - open browser on URL:port in ouput: http://127.0.0.1:5000
+# - open browser on URL:port in ouput: http://127.0.0.1:5000, or http://localhost:5000

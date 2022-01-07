@@ -11,6 +11,7 @@ def return_prediction(model,scaler,sample_json):
     s_wid = sample_json["sepal_width"]
     p_len = sample_json["petal_length"]
     p_wid = sample_json["petal_width"]
+    #flower = [[s_len,s_wid,p_len,p_wid]]
     flower = pd.DataFrame([[s_len,s_wid,p_len,p_wid]])
     flower.columns = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width']
     flower = scaler.transform(flower)
@@ -41,6 +42,7 @@ if __name__ == '__main__':
 # How to run it:
 # - conda install -c anaconda flask
 # - python 02_Flask_API.py
+# - notice the ouput URL: http://127.0.0.1:5000 or http://localhost:5000
 # - open Postman.app
 # -- Create New (HTTP) Request; Save, e.g., as 'Flower Request' in Collection 'Keras Development Tests'
 # -- Type of request: POST
