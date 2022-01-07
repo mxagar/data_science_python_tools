@@ -17,7 +17,7 @@ Basically, the following things are accomplished:
 - A web form is created with Flask-WTF so that the user can query the class of a sample with a GUI.
 - Finally, the local web application is deployed to the internet using `heroku`, which is free.
 
-List of files in it (in order of creation & relevance):
+List of files in it (in order of creation & of learning progression):
 
 - `19_11_1_Keras_Deployment_Model_Iris.ipynb`: the model is defined and trained for the Iris dataset. Then, the code to be deployed is collected in a cell, ready for copy & paste. After creating the model, two files are saved:
     - `final_iris_model.h5`: the final trained TF/Keras model
@@ -96,4 +96,55 @@ To install Flask and Flask Web-Form Tools:
 conda install -c anaconda flask
 conda install -c anaconda flask-wtf
 ```
+
+The python file `04_Flask_Web_Form.py` is a vanilla example which:
+- Creates the web-app that holds the DL model
+- Displays a web form on a local URL which can be filled in by users: sample feature values can be introduced
+- After clicking on submit/analyze, the result is displayed
+
+To execute it:
+
+```bash
+python 04_Flask_Web_Form.py
+```
+
+## Deployment beyond Local Web Page: Heroku
+
+There are many options to deploy a model wrapped on a Flask application on the internet: AWS, Azure, etc.; we can just google "Flask web app deploy..." for available options and tutorials. A possible free option is [Heroku](https://www.heroku.com).
+
+### Step 1: Create the deployment folder
+
+Copy the deployment files to the created folder:
+
+```bash
+mkdir heroku_deployment
+cp 04_Flask_Web_Form.py heroku_deployment/app.py
+cp final_iris_model.h5 heroku_deployment/final_iris_model.h5
+cp iris_scaler.pkl heroku_deployment/iris_scaler.pkl
+cp -r templates heroku_deployment/templates
+```
+
+That folder needs to be added to a heroku git repository; therefore, if we are working on a git repository, **we need to add it to .gitignore**.
+
+### Step 2: Create a Heroku account and download the Heroku CLI
+
+- Create a free Heroku account
+- Download & install Heroku CLI (google it); note that we need to have git installed, too
+
+
+
+
+pip install flask
+pip install Flask-WFT
+pip install scikit-learn
+pip install tensorflow
+pip install gunicorn
+
+
+pip freeze > requirements.txt
+
+
+Note that we can fin our heroku apps on the [heroku dashboard](https://dashboard.heroku.com/apps).
+
+
 
