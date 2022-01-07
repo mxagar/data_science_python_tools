@@ -1,15 +1,21 @@
 # Deployment of Deep Learning Models
 
-This section explains how the deployment of a TF/Keras model can be done with a local web application written with Flask/Python. Basically, the following steps are carried out:
-- A model is created on a notebook and exported to a file
-- A Flask-based web-app is created which offers a custom API; that API receives a JSON of a new sample and returns the prediction
-- We use Postman for testing the API
-- We use then python to test the API
-- A web form is created with Flask-WTF so that the user can query the class of a sample with a GUI
-- Finally, the local web application is deployed to the internet using `heroku`, which is free.
+This section/folder explains how the deployment of a TF/Keras model can be done with a local web application written with Flask/Python.
+
+I created the section/folder while coding along the Udemy course by J.M. Portilla
+
+[Complete Tensorflow 2 and Keras Deep Learning Bootcamp](https://www.udemy.com/course/complete-tensorflow-2-and-keras-deep-learning-bootcamp/)
 
 The examples are quite rudimentary, but it fulfills its goal.
 However, I am not sure the steps followed here are a best practice in terms of CI/CD...
+
+Basically, the following things are accomplished:
+- A model is created on a notebook and exported to a file, together with the data scaler.
+- A Flask-based web-app is created which offers a custom API; that API receives a JSON of a new sample and returns the prediction.
+- We use Postman for testing the API.
+- We use then python to test the API.
+- A web form is created with Flask-WTF so that the user can query the class of a sample with a GUI.
+- Finally, the local web application is deployed to the internet using `heroku`, which is free.
 
 List of files in it (in order of creation & relevance):
 
@@ -31,6 +37,7 @@ First, we need to start our Flask-based web API:
 
 ```bash
 python 02_Flask_API.py
+# Notice the output URL: http://127.0.0.1:5000 or http://localhost:5000
 ```
 
 Then, we open `Postman.app` and
