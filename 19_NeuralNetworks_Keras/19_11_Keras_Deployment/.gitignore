@@ -1,0 +1,4 @@
+.vscode
+*.h5
+*.pkl
+.DS_Store
