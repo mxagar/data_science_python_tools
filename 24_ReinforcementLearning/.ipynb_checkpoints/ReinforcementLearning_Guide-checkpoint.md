@@ -25,8 +25,7 @@ In addition to the notebooks in here, this course reviews other introductory con
 
 ```bash
 conda env list
-# conda create -n 3d python=3.8
-source activate 3d
+conda activate tf
 pip install jupyter numpy matplotlib gym
 # We can also do in a Jupyter notebook: `!pip install gym`
 # And we can also install stuff using Anaconda
