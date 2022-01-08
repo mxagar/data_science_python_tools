@@ -45,3 +45,22 @@ Introductory sections, not covered here:
 In particular, the guide on Keras collects all important notebook I have on the topic to date:
 `~/Dropbox/Documentation/howtos/keras_tensorflow_guide.txt`.
 
+## 2. Reinforcement Learning (RL) Concepts
+
+Where does RL lie in the Machine Learning landscape?
+- Supervised learning requires labelled data
+- Unsupervised learning has unlabelled data
+- Reinforcement learning does not use historical data, instead, RL uses rewarded repetition to learn a desired behavior on an environment
+
+Important elements:
+- **Agent**: AI that can observe and interact with the environment performing actions; example: robot
+    - Observations are often partial
+- **Environment**: the scenario where the game develops with its rules (physical and others); example: maze
+    - The environment can change through the actions of the agent
+- **State** vs **Observation**: the state is the complete description of the environment, without hidden data; usually, what we get are observations, though, which are partial views of the state, with hidden or undiscovered pieces of information
+- **Reward**: we have a goal state in mind, which we would like to achieve. Afte r executing an action, we make observations and estimate the state; depending on how far we are from the goal state (or our improvement towards it, I understand), we assign a better (positive) or worse (negative) reward.
+- **Policy**: a set of rules  of the AI to decide what to do next depending on the observations and the reward.
+    - The policy is updated to maximize the reward in the direction of the expected goal state
+
+Typical example: Cart pole (in Spanish, *péndulo invertido*): The goal is to maintain the cart pole upright by moving the cart left/right; we get an observation of the pole's angle after our moving action and a reward is accordingly assigned depending on it.
+
