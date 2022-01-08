@@ -1,6 +1,7 @@
 # Deployment of Deep Learning Models
 
 This section/folder explains how the deployment of a TF/Keras model can be done with a local web application written with Flask/Python.
+Note that as far as I understand the guideline is not specific to TF/Keras, but virtually any ML model could be deployed this way.
 
 I created the section/folder while coding along the Udemy course by J.M. Portilla
 
@@ -25,7 +26,10 @@ List of files in it (in order of creation & of learning progression):
 - `01_Basic_Flask_App.py`: very simple Flask app in which a web application with a greeting is created.
 - `02_Flask_API.py`: the previous python file is updated to contain the deployment code from the notebook. As a result, we create a Flask app that has an API which can be accessed to request predictions upon new samples. We can use the API with `curl`, `python-requets`, etc. A very common and simple option for testing APIs is Postman. See next section for more details on how to perform an API request using Postman.
 - `03_Python_Request.py`: python script that performs a request to the API started with the previous file; in other words, this program sends a JSON with a sample to the web-app with model and receives the class of flower from it.
-- `04_Flask_Web_Form.py`: 
+- `04_Flask_Web_Form.py`: python script that creates a Flask-based web form with which the user interacts by introducing the values of the four features of a sample; when submit button is pressed, the model is run and the flower class is displayed. The web form can be run locally or hosted on a server on the internet (e.g., Heroku). Two HTML template files are created for it to run:
+  - `templates/home.html`
+  - `templates/prediction.html`
+- `heroku_deployment/`: folder which contains files copied from the upper folder to perform the deployment of the model on Heroku (see last section below). 
 
 ## Postman API Requests & Python Requests
 
@@ -128,23 +132,65 @@ That folder needs to be added to a heroku git repository; therefore, if we are w
 
 ### Step 2: Create a Heroku account and download the Heroku CLI
 
-- Create a free Heroku account
-- Download & install Heroku CLI (google it); note that we need to have git installed, too
+- Create a free Heroku account.
+- Download & install Heroku CLI (google it); that is via `brew` in Mac. Note that we need to have git installed, too.
 
+### Step 3: Prepare the contents of the deployment folder
 
+- Create a new conda environment and installl **only with `pip`** the necessary packages. It needs to be with `pip` because we need to generate a `pip freeze` requirements file for installing on the Heroku servers.
 
-
+```bash
+cd ./heroku_deployment
+# We need a an environment with this specific version of Python
+conda create --name heroku_deployment_env python=3.7
+conda activate heroku_deployment_env
+# Install required packages only with pip
 pip install flask
-pip install Flask-WFT
+pip install Flask-WTF
 pip install scikit-learn
 pip install tensorflow
+# G Unicorn allows us to push our flask app to the Heroku servers
 pip install gunicorn
-
-
+pip install pandas
+# Create requirements file
 pip freeze > requirements.txt
+```
 
+- Create a process file, `vim ./Procfile`, with the following content
 
-Note that we can fin our heroku apps on the [heroku dashboard](https://dashboard.heroku.com/apps).
+```
+web: gunicorn app:app
+```
 
+- Create a runtime Python version file, `vim ./rungtime.txt`, with the following content
 
+```
+python-3.7.11
+```
+
+### Step 4:  Create a new Heroku app and deploy our model
+
+Go to the [Heroku dashboard](https://dashboard.heroku.com/apps) and create a new app:
+- Name, e.g.: `iris-classificator`
+- Region: Europe
+- Create
+- Choose: Heroku Git (Deploy)
+- Follow the setup instructions there: we basically create a git repository of our deplyment folder and connect it to the remote Heroku site.
+
+```bash
+# Log in: a web site should open
+heroku login
+# Create a git repo
+cd heroku_deployment/
+git init
+heroku git:remote -a iris-classificator
+# Add files to repo and DEPLOY
+git add .
+git commit -am "adding files to repo"
+git push heroku master
+```
+
+- If changes done or errors during deployment need to be corrected, modify the files are re-run a propper version of the last 3 lines
+
+**However, I could not manage to run my model on Heroku. The reason was that the slug was too big (600 MB > 500 MB)**. I did not spend much time trying to solve the issue, so I left it untested -- it seems to work for the instructor, though.
 
