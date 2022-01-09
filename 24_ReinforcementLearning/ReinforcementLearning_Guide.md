@@ -109,7 +109,7 @@ That is so because the state space might be very large to sweep and propagate al
 
 The discount factor models tha fact that a state value in future steps will loose its value (because we are less sure); in our case, it can be considered $\gamma = 1$ for simplicity.
 
-### Deterministic vs. Stochastic Processes
+### Deterministic vs. Stochastic Policies
 
 A **deterministic policy** maps a state to an action.
 
@@ -117,13 +117,28 @@ $a \leftarrow \mu(s)$
 
 A **stochastic policy** assigns probabilities to the set of possible action available for the state; that way, we choose the one with the highest probability, but we are open to take other actions, too!
 
+$\pi(a_i|s)$: $\pi(a_1|s)$, $\pi(a_2|s)$, $\pi(a_2|s)$, $\pi(a_4|s)$
+
 That is also known as **exploitation** (one deterministic action) vs **exploration** (a set of possible actions to try).
+
+![Deterministic vs. stochastic policies (by Luis Serrano)](pics/stochastic_vs_deterministic.png)
+
 ### Neural Netowks for Value & Policy Prediction
 
 Since computing the **state values** $V(s)$ and the **action policies** (i.e., which actions to take in each state) might be very expensive for large worlds, one can train neural networks that predict them given past history; that is the key idea behind Deep Reinforcement Learning.
 
-**Value networks** 
+**Value networks** get the coordinates $(x,y)$ of a state/cell $s$ and output its value $V(s)$. The underlying assumption is that close states will have close values. They are trained wandering the environment and forcing the network to yield values compliant with the Bellman equation. This works in practice a s follows:
+- We select a cell/state $s$
+- We predict with the network its value and the value of its neighbors
+- We compute the value of the cell according to the Bellman equation
+- We have now a datapoint: the coordinates and the Bellman value
+- We compute the error as the difference between the initial guessed value and the Bellman value with the neighbor values
+- We apply backpropagation
+- If these steps are repeated enough times, the state value predictions converge!
 
-
-**Policy networks**
+**Policy networks** get the coordinates $(x,y)$ of a state/cell $s$ and output the probability for each of the possible actions $\pi(a_i|s)$, in other words, the stochastic policy. The underlying assumption is that close states will have close policies. They are trained wandering the environment. They are trained as follows:
+- We get a path from the network: we predict the policies for the cells and follow the path with the highest probability until we end in a terminal cell.
+- We assign **gain** values to each cell backwards starting from the terminal cell: gains are assigned according to Bellman, that is, we basically decrease the final cell value at each step backwards with the reward.
+- Our sample datapoints consist of: coordinates, action taken and gain.
+- Since we achieved the target, we force the network to increase the action probabilities that yielded it, but with a trick: The gain is multiplied to the weight update during network optimization. That way, only high gains are really reinforced.
 
