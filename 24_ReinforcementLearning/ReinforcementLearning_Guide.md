@@ -142,3 +142,29 @@ Since computing the **state values** $V(s)$ and the **action policies** (i.e., w
 - Our sample datapoints consist of: coordinates, action taken and gain.
 - Since we achieved the target, we force the network to increase the action probabilities that yielded it, but with a trick: The gain is multiplied to the weight update during network optimization. That way, only high gains are really reinforced.
 
+## 3. OpenAI Overview
+
+### Brief History of OpenAI
+
+2015: Elon Musk and Sam Altman announced the formation of OpenAI.
+Sam Altman is the current CEO.
+It started as a non-profit: benefits for humanity sought, goal of reducing the risk of potential harm by AI. They were concerned by AI algorithms being researched only on private companies.
+
+OpenAI Gym is the library they published in 2016: it can be used to set up environments for reinforcement learning.
+
+2018: GPT is published by OpenAI: Generative Pre-Trained algorithm able to produce meaningful/conversational text taking into account the context; the model was trained with a large corpus of data (e.g., the Wikipedia).
+
+2018: Dactyl: a shadow hand trained only in simulations; the robotic hand was able to manipulate a cube after learning everything in the simulation.
+
+2018: Musk left the OpenAI board due to the fact that Tesla was developing also AI algorithms.
+
+2019: OpenAI becomes for-profit, but with a profit cap (100x).
+
+June 2019: GPT-2 is announced, but no code/model provided - the reason according to OpenAI: because bad actors could misuse their model to produce fake new or related; they were criticised for that. Later in Vovember 2019 the model was completely published. It is huge: 1.5 billion parameters.
+
+2020: GPT-3 is announced: 175 billion parameters, the largest language model ever created; Microsoft has the exclusive license.
+
+2021: DALL-E paper is published by OpenAI: very nice Text-to image model. The model is not public.
+
+### OpenAI Gym Documentation
+
