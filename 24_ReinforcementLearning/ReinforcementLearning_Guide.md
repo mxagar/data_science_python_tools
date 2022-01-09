@@ -48,19 +48,64 @@ In particular, the guide on Keras collects all important notebook I have on the 
 ## 2. Reinforcement Learning (RL) Concepts
 
 Where does RL lie in the Machine Learning landscape?
-- Supervised learning requires labelled data
-- Unsupervised learning has unlabelled data
-- Reinforcement learning does not use historical data, instead, RL uses rewarded repetition to learn a desired behavior on an environment
+- Supervised learning requires labelled data.
+- Unsupervised learning has unlabelled data.
+- Reinforcement learning does not use historical data, instead, RL uses rewarded repetition to learn a desired behavior on an environment. In other words: we don't have a dataset, but we act in an environment and see what happens.
 
 Important elements:
 - **Agent**: AI that can observe and interact with the environment performing actions; example: robot
-    - Observations are often partial
+    - Observations are often partial.
 - **Environment**: the scenario where the game develops with its rules (physical and others); example: maze
-    - The environment can change through the actions of the agent
-- **State** vs **Observation**: the state is the complete description of the environment, without hidden data; usually, what we get are observations, though, which are partial views of the state, with hidden or undiscovered pieces of information
+    - The environment can change through the actions of the agent.
+- **State** vs **Observation**: the state is the complete description of the environment, without hidden data; usually, what we get are observations, though, which are partial views of the state, with hidden or undiscovered pieces of information; note that both are often mixed of used interchangedly.
 - **Reward**: we have a goal state in mind, which we would like to achieve. Afte r executing an action, we make observations and estimate the state; depending on how far we are from the goal state (or our improvement towards it, I understand), we assign a better (positive) or worse (negative) reward.
-- **Policy**: a set of rules  of the AI to decide what to do next depending on the observations and the reward.
-    - The policy is updated to maximize the reward in the direction of the expected goal state
+- **Policy**: a set of rules of the AI agent to decide what to do next depending on the observations and the reward. Note that often agent and policy are mixed or used interchangedly.
+    - The policy is updated to maximize the reward in the direction of the expected goal state.
 
-Typical example: Cart pole (in Spanish, *péndulo invertido*): The goal is to maintain the cart pole upright by moving the cart left/right; we get an observation of the pole's angle after our moving action and a reward is accordingly assigned depending on it.
+Typical example: Cart pole (in Spanish, *péndulo invertido*): The goal is to maintain the cart pole upright by moving the cart left/right; we get an observation of the pole's angle after our moving action and a reward is accordingly assigned depending on its angle.
+
+### Markov Decision Process in a Gridworld and the Bellman Equation
+
+I wrote this section after reading Wikipedia articles and watching the following video:
+
+[A friendly introduction to deep reinforcement learning, Q-networks and policy gradients, by Luis Serrano](https://www.youtube.com/watch?v=SgC6AZss478).
+
+The pictures in this section are taken from that video.
+
+The goal of the section is to explain the Bellman equation, which is probably the most important equation in RL, since it defines how the transitions in the state space are defined so that the goal can be reached.
+
+Let's consider a 6x6 **gridworld** in which an agent can move in 4 directions with one step at a time (i.e., 4 **actions**: up/down & left/right), except when boundaries or obstacles are hit; each possible cell is a **state** and can have a **value** assigned to it.
+
+![Gridworld (by Luis Serrano)](pics/gridworld.png)
+
+In that world there are three **terminal states** or cells in which the game ends; we would like to end in the state with the highest value. The process to achieve that is called a **Markov Decision Process**, which consists in executing actions available to the current state that cause transitions to states that are closer to the goal.
+
+The **Bellman equation** is a recursive function which, if called many times, discovers for the complete world
+- the **value function** $V()$ that assigns value to any state/cell in the environment
+- and the **action policy** $a$ of each cell/state, i.e., the optimum action to take to reach the goal.
+
+Let's say we go from one state to a next with a single action $a$: `s -> s'`; we assume:
+- The *value* of each state is given by $V(s)$
+- The action $a$ we take is the *optimal* one, i.e., we are trying to maximize the value
+- Taking that action has a *reward* (watch out: cost due to action) relative to the state we are in: $R(s,a)$.
+
+Then, the Bellman equation is
+
+$V(s) = \max_{a}\{R(s,a) + \gamma V(s')\}$, where
+
+$gamma$ is a **discount factor** $0 < \gamma < 1$, for instance $\gamma = 0.9$; for simplicity, we can consider it to be $\gamma = 1$.
+
+Following the Bellman equation, we can deduce tha value of a cell/state by observing its neighbors; note that while we go from `s` to `s'` during navigation, for value assigning, we do the oposite: `s' -> s`. Thus, according to the Bellman equation, the value of `s` is the maximum possible value of the next neighbors ($V(s')$) plus the reward ($R(s,a)$), which is negative.
+
+![Value propagation with the Bellman equation (by Luis Serrano)](pics/propagation.png)
+
+With the Bellman equation we propagate the values of the cells/states from the known ones to the unknowns decreasing with the reward $R(s,a)$ at each step, as if it were a *distance field*.
+Note that if we start propagating from different terminal states, inconsistencies might appear in the distance field; however, if we continuously re-run the Bellman equation in the map, the values will converge to a consistent function.
+The best policy will be then to take the action that leads to the neighbor cell with the largest value.
+Note that **the Bellman equation is usually solved by randomly visiting states/cells: if neighbor values are known, the value of the visited cell/state is updated, until enough states are known and converge**.
+That is so because the state space might be very large to sweep and propagate all values.
+
+![Bellman equation (by Luis Serrano)](pics/bellman.png)
+
+The discount factor models tha fact that a state value in future steps will loose its value; in our case, it can be considered $\gamma = 1$ for simplicity.
 
