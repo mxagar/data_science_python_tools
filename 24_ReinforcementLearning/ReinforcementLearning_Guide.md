@@ -107,5 +107,23 @@ That is so because the state space might be very large to sweep and propagate al
 
 ![Bellman equation (by Luis Serrano)](pics/bellman.png)
 
-The discount factor models tha fact that a state value in future steps will loose its value; in our case, it can be considered $\gamma = 1$ for simplicity.
+The discount factor models tha fact that a state value in future steps will loose its value (because we are less sure); in our case, it can be considered $\gamma = 1$ for simplicity.
+
+### Deterministic vs. Stochastic Processes
+
+A **deterministic policy** maps a state to an action.
+
+$a \leftarrow \mu(s)$
+
+A **stochastic policy** assigns probabilities to the set of possible action available for the state; that way, we choose the one with the highest probability, but we are open to take other actions, too!
+
+That is also known as **exploitation** (one deterministic action) vs **exploration** (a set of possible actions to try).
+### Neural Netowks for Value & Policy Prediction
+
+Since computing the **state values** $V(s)$ and the **action policies** (i.e., which actions to take in each state) might be very expensive for large worlds, one can train neural networks that predict them given past history; that is the key idea behind Deep Reinforcement Learning.
+
+**Value networks** 
+
+
+**Policy networks**
 
