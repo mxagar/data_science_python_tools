@@ -188,23 +188,22 @@ The most important part is the one related to the environments; when we select o
 - Robotics: the Dactyl is here.
 - Third party envs (link is broken at the moment).
 
-### Gym Environments
+### Gym Environments: Overview - `01_OpenAI_Gym_Overview.ipynb`
 
 See notebook
 
-
+`01_OpenAI_Gym_Overview.ipynb`
 
 This notebook starts exploring the OpenAI Gym library with the following games:
 
 1. [Atari / Breakout](https://gym.openai.com/envs/Breakout-ram-v0/)
 2. [Classic control / Mountain Car](https://gym.openai.com/envs/MountainCar-v0/)
 
-Note 1: the RAM version can be used for the Atari game: the ball position and paddle location are obtained from gym.
+Note 1: We have two game versions:
+- `RAM` version: ball coordinates and paddle location are returned, not images; useful for simple environments.
+- Standard: a history of images is returned; CNNs are required.
 
 Note 2: if we use Jupyter notebooks, sometimes we need to restart the kernel; an alternative is to use python scripts.
-
-
-Game: Move paddle so that we hit a ball that collides agains a rainbow ball; collisions remove rainbow blocks (goal). If we miss hitting the ball, it falls down (avoid).
 
 Typical methods we need to know:
 - `reset()`
@@ -213,7 +212,157 @@ Typical methods we need to know:
     - `render("human")`: images rendered, for human beings
     - `render("rgb_array")`: numpy RGB array; for computers or visualizing with matplotlib
 
-Recall we have two game versions:
-- `RAM` version: ball coordinates and paddlelocation are returned, not images; useful for simple environments.
-- Standard: a history of images is returned; CNNs are required.
+#### 1. Atari Breakout Game
 
+Popular Atari game in which we m ove paddle so that we hit a ball that collides agains a rainbow ball; collisions remove rainbow blocks (goal). If we miss hitting the ball, it falls down (avoid).
+
+Note that an extra environment needs to be installed, along with pygame:
+
+```bash
+pip install 'gym[atari,accept-rom-license]'
+pip install pygame
+```
+
+This section shows how to:
+
+- Create simulation loops
+- Render images or numpy arrays
+- Access actions and execute them
+
+Summary of most important lines
+
+```python
+import gym
+# For plotting
+import matplotlib.pyplot as plt
+# For slowing down the game
+import time
+
+# Select a game/environment from
+# gym.openai.com
+# If we go to Atari/Breakout-v0 we can see the source code
+# We could use the source code file or let gym grab it
+# as follows below.
+# HOWEVER: Always have a look at the code!
+
+# The string of the name is the title of the game
+env_name = 'Breakout-v0'
+#env_name = 'Breakout-ram-v0'
+
+# The source code is grabbed
+env = gym.make(env_name)
+
+# We can interact/play from some Atari games
+# and classic control envs.
+# We need to have pygame installed: pip install pygame
+from gym.utils import play
+
+# We pass the env and zoom the window 2-3x
+# Keys:
+# - space: launch ball
+# - a: move left
+# - d: move right
+# When we close the window, we might need to restart the kernel
+play.play(env,zoom=3)
+
+# Window will be opened and game rendered step-wise (but very fast)
+# Nothing happens for now
+# because no actions are commanded
+for steps in range(2000):
+    env.render(mode='human')
+
+# Close env/game window
+env.close()
+
+# Now we render is as a numpy array/image
+array = env.render(mode='rgb_array')
+
+%matplotlib inline
+plt.imshow(array)
+
+# Action Space: how many actions can we execute?
+env.action_space
+env.action_space.n
+
+# Let's render the game executing random actions
+# A windw opens and displays the random game
+# First, we need to always reset it to the initial state
+_ = env.reset()
+for step in range(200):
+    env.render("human")
+    # Random action (int), chosen uniformly
+    # look at github/code the meaning of actions
+    random_action = env.action_space.sample()
+    # We performa steo passing the action
+    # and we get 4 objects:
+    # - observation
+    # - reward given
+    # - whether the game is finished
+    # - game specific info
+    observation, reward, done, info = env.step(random_action)
+    print(f'Reward: {reward}')
+    print(f'Done: {done}')
+    print(f'Info: {info}')
+    if done: #eg, if we run out of lives
+        break
+    # I we want to visualize it, we need to slow it down
+    time.sleep(0.1)
+env.close()
+```
+
+#### 2. Mountain Car
+
+A very famous testbed published by Moore in 1990: "A car is on a one-dimensional track, positioned between two mountains. The goal is to drive up the mountain on the right; however, the car's engine is not strong enough to scale the mountain in a single pass. Therefore, the only way to succeed is to drive back and forth to build up momentum."
+
+Note that:
+- There is gravity
+- We have a single position variable in X axis; 0 appears to be the valley, 0.5 the flag
+- The goal is to directly land the falg, no less, no more!
+
+Links:
+- [MountainCar-v0](https://gym.openai.com/envs/MountainCar-v0/)
+- [Github link](https://github.com/openai/gym/blob/master/gym/envs/classic_control/mountain_car.py)
+
+```python
+import gym
+import time
+
+env_name = 'MountainCar-v0'
+env = gym.make(env_name)
+
+# Look in the code to understand the meaning of the actions
+# https://github.com/openai/gym/blob/master/gym/envs/classic_control/mountain_car.py
+# 0: accelerate to the left
+# 1: stay put
+# 2: accelerate to the right
+env.action_space
+
+# Note that this agent with the defined policy is able to climb
+# the mountain, but we are not successful on landing exactly on the flag.
+# Additionally, no rewards are used, i.e., this is not RL
+# Instead, we see how we can interact with the environment
+def simple_agent(observation):
+    # Observation
+    position, velocity = observation
+    # When to go right
+    if position > -0.1:
+        action = 2
+    # When to go left
+    elif velocity < 0 and position < -0.2:
+        action = 0
+    # When to do nothing
+    else:
+        action = 1
+    return action
+
+    env.seed(42)
+observation = env.reset()
+
+for step in range(600):
+    env.render(mode="human")
+    action = simple_agent(observation)
+    observation, reward, done, info = env.step(action)
+    time.sleep(0.001)
+env.close()
+
+```
