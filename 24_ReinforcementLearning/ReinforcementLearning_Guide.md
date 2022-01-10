@@ -1,4 +1,4 @@
-# Reinforcement Learning Notebooks
+# Reinforcement Learning: Notebooks
 
 I made these notebooks following the Udemy course by José Portilla **Practical AI with Python and Reinforcement Learning**:
 
@@ -16,7 +16,7 @@ In addition to the notebooks in here, this course reviews other introductory con
 1. Introduction and Setup
 2. Reinforcement Learning Concepts
 3. OpenAI Gym Overview
-4. Classical Q-Learning
+4. (Classical) Q-Learning
 5. Deep Q-Learning
 6. Deep Q-Learning on Images
 7. Creating Custom OpenAI Gym Environments
@@ -244,7 +244,6 @@ import time
 # We could use the source code file or let gym grab it
 # as follows below.
 # HOWEVER: Always have a look at the code!
-
 # The string of the name is the title of the game
 env_name = 'Breakout-v0'
 #env_name = 'Breakout-ram-v0'
@@ -256,7 +255,6 @@ env = gym.make(env_name)
 # and classic control envs.
 # We need to have pygame installed: pip install pygame
 from gym.utils import play
-
 # We pass the env and zoom the window 2-3x
 # Keys:
 # - space: launch ball
@@ -265,6 +263,7 @@ from gym.utils import play
 # When we close the window, we might need to restart the kernel
 play.play(env,zoom=3)
 
+# We can also simply render
 # Window will be opened and game rendered step-wise (but very fast)
 # Nothing happens for now
 # because no actions are commanded
@@ -276,7 +275,6 @@ env.close()
 
 # Now we render is as a numpy array/image
 array = env.render(mode='rgb_array')
-
 %matplotlib inline
 plt.imshow(array)
 
@@ -355,7 +353,7 @@ def simple_agent(observation):
         action = 1
     return action
 
-    env.seed(42)
+env.seed(42)
 observation = env.reset()
 
 for step in range(600):
@@ -366,3 +364,47 @@ for step in range(600):
 env.close()
 
 ```
+
+## 4. (Classical) Q-Learning
+
+Q-Learning is a Reinforcement Learning algorithm able to learn the optimal policy ina Markov-Decision-Process without having a model of the environment. An optimal policy means that the expected reward in the successive steps is maximum.
+
+Q refers to the state value in the Bellman equation, represented sometimes as $V(s)$. However, here we emphasize the fact that 
+
+The roots of Q-Learning are in children development studies by Jean Piaget; later, in the 1990's, Chris Watkins and Peter Dayan (director or Max Plank, Biological Cybernetics, Tübingen) presented the algorithm.
+
+If we use neural networks during the prediction phase of Q-Learning, we are carrying out **Deep Q-Learning** or **Deep Reinforcement Learning**. That term was coined by DeepMind in the 2010's.
+
+### Intuition
+
+Recall the cycle in Reinforcement Learning: an agent performs an action in the environment according to a policy, which leads to a reward and observations of state change; then, a policy update occurs, which should lead to better future actions in the direction of the final goal.
+
+Q-Learning works with a table, **the Q-Learning Table**: all possible states vs all possible actions. That is possible if the state space and the action space are each discrete and finite. The content of each cell in the table is the $Q(s,a)$ function or value, which is the **expected long-term reward for each state-action pair**.
+
+Creating and updating that table is the foundation of Q-Learning: once the table has been learned, the Q-Learning table serves as a look-up table: given a state, we take the action with the highest Q(s,a). Watkins and Dayan proved that the table converges for discrete state and action spaces.
+
+To bette understand that, let's consider the game [Frozen Lake](https://gym.openai.com/envs/FrozenLake-v0/). We have an array of 4x4 cells (= 16 possible states) and our agent needs to navigate from a Starting point S to a goal point G. On the way, we have frozen cells (F) on which it can walk and holes (H), into which it can fall andd the game ends. The agent has 4 possible actions at each time step: up/down, left/right.
+
+![The Frozen Lake Game](./pics/frozen_lake.png)
+
+The Q-Learning table of the Frozen Lake game would be 16 (states) x 4 (actions):
+
+![The Q-Learning Table of the Frozen Lake Game](./pics/q_table.png)
+
+Unfortunately, the Q-Learning algorithm/table is not able to solve all problems, although Watkins and Dayan proved it converges for discrete state spaces and action spaces. These are its limitations:
+- It converges for discrete spaces only, not continuous ones; however, it is possible to meaningfully discretize some spaces.
+- It grows in size too much for realistic scenarios. Let's consider chess: it has 8x8 cells but much more states, since each piece location configuration is actually a state. Additionally, for each state, all possible actions need to be listed: any piece movement. Note that even the definition of all possible states and actions in chess is mathematically not solved.
+
+### Q Function
+
+See also Sutton & Barto (Reinforcement Learning -- An Introduction), Section 6.5.
+
+The $Q(s,a)$ function defines the long-term expected reward for a state-action pair:
+
+$Q(s,a) = E[r]$
+
+The long-term rewards is not the ommediate rewards, but all the rewards during the time!
+
+![Q Function](./pics/q_function_1.png)
+
+![Q Function](./pics/q_function_2.png)
