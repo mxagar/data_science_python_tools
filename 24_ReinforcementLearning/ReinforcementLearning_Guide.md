@@ -26,7 +26,14 @@ In addition to the notebooks in here, this course reviews other introductory con
 ```bash
 conda env list
 conda activate tf
-pip install jupyter numpy matplotlib gym
+pip install jupyter numpy matplotlib 
+# Install OpenAI Gym base library
+pip install gym
+# By default, only the classic control family is installed
+# We need to install specific environment families manually
+# Note that I had issues installing Box2D and MuJoCo
+pip install 'gym[atari,accept-rom-license]'
+pip install pygame
 # We can also do in a Jupyter notebook: `!pip install gym`
 # And we can also install stuff using Anaconda
 conda install lxml pandas pillow scikit-learn seaborn tensorflow
@@ -168,3 +175,30 @@ June 2019: GPT-2 is announced, but no code/model provided - the reason according
 
 ### OpenAI Gym Documentation
 
+The documentation page of OpenAI does not have extensive information:
+
+[OpenAI Documentation](https://gym.openai.com)
+
+The most important part is the one related to the environments; when we select one, we need to read the source to understand what they're about. They have also a link to the original paper where they were defined/suggested. The environments are classified as follows:
+- Classical control: usually, we start here; the typical Cart-Pole and Mountain-Car scenarios are here.
+- Atari: images of Atari games. We have 2 versions for some games: the one with RAM contains relevant information on some object positions, etc.; the other has only images and a CNN should be applied to understand the object poses.
+- Box2D: 2D physics engine.
+- MuJoCo: 3D physics engine, often the famous manequins that learn to walk.
+- Algorithms: algorithms that learn to sort sequences, etc.
+- Robotics: the Dactyl is here.
+- Third party envs (link is broken at the moment).
+
+### Gym Environment for Atari BreakOut Game
+
+Game: Move paddle so that we hit a ball that collides agains a rainbow ball; collisions remove rainbow blocks (goal). If we miss hitting the ball, it falls down (avoid).
+
+Typical methods we need to know:
+- `reset()`
+- `step(action)`: e.g., `4: left`, etc.
+- `render()`
+    - `render("human")`: images rendered, for human beings
+    - `render("rgb_array")`: numpy RGB array; for computers or visualizing with matplotlib
+
+Recall we have two game versions:
+- `RAM` version: ball coordinates and paddlelocation are returned, not images; useful for simple environments.
+- Standard: a history of images is returned; CNNs are required.
