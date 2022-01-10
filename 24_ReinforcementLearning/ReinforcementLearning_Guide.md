@@ -188,7 +188,21 @@ The most important part is the one related to the environments; when we select o
 - Robotics: the Dactyl is here.
 - Third party envs (link is broken at the moment).
 
-### Gym Environment for Atari BreakOut Game
+### Gym Environments
+
+See notebook
+
+
+
+This notebook starts exploring the OpenAI Gym library with the following games:
+
+1. [Atari / Breakout](https://gym.openai.com/envs/Breakout-ram-v0/)
+2. [Classic control / Mountain Car](https://gym.openai.com/envs/MountainCar-v0/)
+
+Note 1: the RAM version can be used for the Atari game: the ball position and paddle location are obtained from gym.
+
+Note 2: if we use Jupyter notebooks, sometimes we need to restart the kernel; an alternative is to use python scripts.
+
 
 Game: Move paddle so that we hit a ball that collides agains a rainbow ball; collisions remove rainbow blocks (goal). If we miss hitting the ball, it falls down (avoid).
 
@@ -202,3 +216,4 @@ Typical methods we need to know:
 Recall we have two game versions:
 - `RAM` version: ball coordinates and paddlelocation are returned, not images; useful for simple environments.
 - Standard: a history of images is returned; CNNs are required.
+
