@@ -369,8 +369,6 @@ env.close()
 
 Q-Learning is a Reinforcement Learning algorithm able to learn the optimal policy ina Markov-Decision-Process without having a model of the environment. An optimal policy means that the expected reward in the successive steps is maximum.
 
-Q refers to the state value in the Bellman equation, represented sometimes as $V(s)$. However, here we emphasize the fact that 
-
 The roots of Q-Learning are in children development studies by Jean Piaget; later, in the 1990's, Chris Watkins and Peter Dayan (director or Max Plank, Biological Cybernetics, Tübingen) presented the algorithm.
 
 If we use neural networks during the prediction phase of Q-Learning, we are carrying out **Deep Q-Learning** or **Deep Reinforcement Learning**. That term was coined by DeepMind in the 2010's.
@@ -403,8 +401,28 @@ The $Q(s,a)$ function defines the long-term expected reward for a state-action p
 
 $Q(s,a) = E[r]$
 
-The long-term rewards is not the ommediate rewards, but all the rewards during the time!
+The long-term reward is not the immediate rewards, but all the rewards during the time! The formula is intuitively derived in the course; the main idea is that we have an update formula: $Q$ updates are modelled in terms of current $Q$ and a step value or error term:
 
 ![Q Function](./pics/q_function_1.png)
 
+The error term is the difference between the target value and the current value, to which the a learning rate is applied to arrive to the target progressively:
+
 ![Q Function](./pics/q_function_2.png)
+
+The target $Q$ value is the maximum Q value in the next state for any given action. That term is multiplied by a discount factor which appears in the deduction of the formula to model the idea that later rewards have less value.
+
+### Computing the Q Function and the Q-Learning Table
+
+We initialize the table with `0` or very small values.
+We let the game play by just taking random actions.
+Note that in FrozenLake the reward is `1` only if the agent wins (i.e., it lands in the Goal cell); if we fall into a hole, the game finishes, but there is no negative reward.
+Each game is an episode; given the number of possibilities, we'll need 100s of episodes until the first win occurs.
+
+When a win occurs, we update the Q value of the state-action pairs of the table following the formula of the Q function: we get factional numbers in the cells, because of the learning factor, etc.
+Then, we play again; note that we have 2 options:
+- exploration: we perform random actions instead the best ones in order to discover new strategies
+- exploitation: we perform the best known action to win faster
+
+That choice occurs in the term $\max_a{Q(S_{t+1},a)}$: we can take the action with the best Q (exploitation) or a random action with its Q (exploration).
+That balance between exploration vs exploitation is controlled with the hyperparameter `epsilon`, which is defined to decay (exponentially) over time: epsilon dictates the probability of taking a random action or the best known one.
+This is known as the **greedy epsilon choice**.
