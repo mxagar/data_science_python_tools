@@ -697,5 +697,75 @@ env.close()
 
 ```
 
+### Final Remarks
+
+I skimmed through these posts
+- [Stackoverflow: Q-Learning](https://stackoverflow.com/questions/34181056/q-learning-vs-temporal-difference-vs-model-based-reinforcement-learning)
+- [Medium: Temporal Difference Learning](https://towardsdatascience.com/intro-to-reinforcement-learning-temporal-difference-learning-sarsa-vs-q-learning-8b4184bb4978)
+- [Stackoverflow: Q-Learning vs SARSA](https://stackoverflow.com/questions/6848828/what-is-the-difference-between-q-learning-and-sarsa)
+
+And these are the unchecked conclusions I came up with:
+- Q-Learning and SARSA are both the most important algorithms in **Temporal Difference Learning**.
+- Temporal Difference Learning is a **model-free** RL approach approach to learning how to predict a quantity that depends on future values of a given signal. There is no model, just the Q table.
+- Q-Learning and SARSA differ basically on how Q is updated and the best next action are chosen; they have very similar Q update formulae, but:
+  - SARSA: Q update and action choice are done according to an epsilon-greeedy policy, i.e., if epsilon is not  `0` exploration is done.
+  - Q-Learning: action choice is epsilon-greedy, but Q update is greedy: no exploration is done and the max is taken.
+
 ## 5. Deep Q-Learning
 
+Some notes on the meaning of terms:
+- Deep Q-Learning = DQN.
+- Deep Reinforcement Learning is Reinforcement Learning when (Deep) Neural Networks are involved; it is a broader topic than DQN, since there are some other techniques other than Q-Learning in Reinforcement Learning.
+- Deep Q-Learning is more specific: it refers to the fact when Deep Learning is applied to Q-Learning.
+
+### History of DQN
+
+- 1992: IBM develops a TD-Backgammon agent/algorithm (TD: Temporal Difference ~ Q-Learning); they trained an ANN and learned to play Backgammon. Unknown strategies emerged that were not popular at the time.
+- 2010: DeepMind popularized RL: they started implementing DQNs to play Atari games; they also attached CNNs to RL agents to understand images.
+- 2014 DeepMind is acquired by Google
+- Some of the milestones since then
+  - `AlphaGo` RL prgram that beat the Go world champion
+  - `[AlphaZero`: RL program able to play chess & go, among other
+  - `[AlphaStar`: RL program that plays StarCraft II
+  - `[AlphaFold`: Protein structure prediction
+
+### Review of RL Concepts
+
+Recall these concepts from previous sections.
+
+- The RL cycle (see Section 2): environment, agent, action (according to our policy), reward, observation, state update.
+- Q-Table: `states x actions`. **Limitations**:
+  - As we increase the size of the discrete world, thenumber of states explodes.
+  - Some games, such as the Packman, might not have well-defined states.
+  - Even if we manage to define all states, the agent must visit dduring training all those states...
+- The Bellman Equation.
+- Deterministic vs. stochastic policies.
+
+### Core Idea of DQN: Overcome the shortcoming of Q-Learning
+
+ANNs are used to estimate:
+- State values
+- Policies (stochastically)
+
+**Value networks** get the coordinates $(x,y)$ of a state/cell $s$ and output its value $V(s)$. The underlying assumption is that close states will have close values. They are trained wandering the environment and forcing the network to yield values compliant with the Bellman equation. This works in practice a s follows:
+- We select a cell/state $s$
+- We predict with the network its value and the value of its neighbors
+- We compute the value of the cell according to the Bellman equation
+- We have now a datapoint: the coordinates and the Bellman value
+- We compute the error as the difference between the initial guessed value and the Bellman value with the neighbor values
+- We apply backpropagation
+- If these steps are repeated enough times, the state value predictions converge!
+
+![Value networks](./pics/value_networks.png)
+
+**Policy networks** get the coordinates $(x,y)$ of a state/cell $s$ and output the probability for each of the possible actions $\pi(a_i|s)$, in other words, the stochastic policy. The underlying assumption is that close states will have close policies. They are trained wandering the environment. They are trained as follows:
+- We get a path from the network: we predict the policies for the cells and follow the path with the highest probability until we end in a terminal cell.
+- We assign **gain** values to each cell backwards starting from the terminal cell: gains are assigned according to Bellman, that is, we basically decrease the final cell value at each step backwards with the reward.
+- Our sample datapoints consist of: coordinates, action taken and gain.
+- Since we achieved the target, we force the network to increase the action probabilities that yielded it, but with a trick: The gain is multiplied to the weight update during network optimization. That way, only high gains are really reinforced.
+
+![Policy networks](./pics/policy_networks.png)
+
+Thanks to these networks, we don't need to see all possible states during training.
+I understand the network interpolates values according to past state-value or state-policy pairs.
+Note that we have two separate networks, but we will link them.
