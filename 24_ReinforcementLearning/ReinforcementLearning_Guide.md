@@ -401,15 +401,50 @@ The $Q(s,a)$ function defines the long-term expected reward for a state-action p
 
 $Q(s,a) = E[r]$
 
-The long-term reward is not the immediate rewards, but all the rewards during the time! The formula is intuitively derived in the course; the main idea is that we have an update formula: $Q$ updates are modelled in terms of current $Q$ and a step value or error term:
+The long-term reward is not the immediate rewards, but all the future rewards during the time!
+
+$Q(s_t,a_t) = r_{t+1} + r_{t+2} + r_{t+3} + ...$
+
+But since we are not as sure of the future rewards, we apply a discount factor/rate increased exponentially to them
+
+$Q(s_t,a_t) = r_{t+1} + \gamma r_{t+2} + \gamma^2 r_{t+3} + ...$
+
+Note that for the time step $t+1$, we have
+
+$Q(s_{t+1},a_{t+1}) = r_{t+2} + \gamma r_{t+3} + \gamma^2 r_{t+4} + ...$
+
+Thus:
+
+$Q(s_t,a_t) = r_{t+1} + \gamma Q(s_{t+1},a_{t+1})$.
+
+$Q(s_{t+1},a_{t+1})$ is the best Q value we get after executing any possible action and transitioning to its associated state $s_{t+1}$, also denoted as
+
+$Q(s_{t+1},a_{t+1}) = \max_a{Q(s_{t+1},a)}$.
+
+In other words, in our state row we see which action has the maximum Q value: we take that action and its Q value.
+
+Then, we have this **target value** for Q:
+
+$Q(s_t,a_t) = r_{t+1} + \gamma \max_a{Q(s_{t+1},a)}$
+
+The idea is that we start playing with the Q table initialized to `0` and as we progress between states and obtain rewards, the corresponding Q values in the cells are updated following an equation derived from the introduced concepts. The final Q update formula is conceptually derived in the course; the main idea is that we have an update formula: $Q$ updates are modelled in terms of current $Q$ and a step value or error term:
 
 ![Q Function](./pics/q_function_1.png)
+
+In pseudo-code:
+
+```
+Q_new <- Q_current + alpha * Q_error
+Q_error = Q_target - Q_current
+Q_target = reward + gamma * maxQ
+maxQ: maximum Q possible in our current state after taking any action
+```
 
 The error term is the difference between the target value and the current value, to which the a learning rate is applied to arrive to the target progressively:
 
 ![Q Function](./pics/q_function_2.png)
 
-The target $Q$ value is the maximum Q value in the next state for any given action. That term is multiplied by a discount factor which appears in the deduction of the formula to model the idea that later rewards have less value.
+The target $Q$ value comprises the maximum Q value in the next state for any given action. That term is multiplied by a discount factor which appears in the deduction of the formula to model the idea that later rewards have less value.
 
 ### Computing the Q Function and the Q-Learning Table
 
@@ -661,3 +696,6 @@ for step in range(1000):
 env.close()
 
 ```
+
+## 5. Deep Q-Learning
+
