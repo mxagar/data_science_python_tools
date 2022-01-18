@@ -426,3 +426,238 @@ Then, we play again; note that we have 2 options:
 That choice occurs in the term $\max_a{Q(S_{t+1},a)}$: we can take the action with the best Q (exploitation) or a random action with its Q (exploration).
 That balance between exploration vs exploitation is controlled with the hyperparameter `epsilon`, which is defined to decay (exponentially) over time: epsilon dictates the probability of taking a random action or the best known one.
 This is known as the **greedy epsilon choice**.
+
+### Continuous Environments
+
+In a discrete environment like `FrozenLake` we have one discrete observation which maps to a unique state variable. In a continuous environment we can have we have `n` continuous observation variables and they map to one state. Also, recall that the Q-Learning table is `state x action`.
+
+To address that issue, we discretize each observation variable in bins and build from the combinations of those observation-bins all possible discrete states. We can represent that in two forms:
+
+- We build a multidimensional matrix/array: dimensions are `observations + action`. Each observation dimension is discretized/binned in all defined ranges and the action dimension contains all possible actions; then, each combination of `observations + action` has a Q value. Thus, 4 observation values lead to a dimension of 5 (`observations + action`). Each dimension has the size of the number of bins or the number of actions. Example: 4 observations, each one with 3 bins and additionally 2 actions: `np.zeros((3,3,3,3,2))`. Then, each cell maps to a possible Q value.
+- Note that combining observations and bins we get all the states. Thus, we can further develop the structure above to have `3^4` states and `2` actions. However, the multidimensional array is more comfortable. 
+### Implementation Notebooks
+
+Altogether, three notebooks are available in `./02_QLearning`; in the following a brief explanation of them is provided:
+
+- `02_1_QLearning_Discrete_FrozenLake.ipynb`: First notebook in which Q Learning is implemented for the `FrozenLake` game. It is a discrete environment and the following sections are analyzed:
+  - Basic setup of `FrozenLake`
+  - Q-Learning Table Initialization & Hyperparameters
+  - Q-Learning Table Update Functions
+  - Training Loop
+  - Utilization and Visualization
+
+- `02_2_QLearning_Continuous_Cartpole.ipynb`: Second notebook in which the continuous game `CartPole` is learned. The example is equivalent to the previous, but more complex because: we have several observations which constitute a state and these observation values are continuous. The sections are the same. Look at this example (see summary below).
+
+- `02_3_QLearning_Continuous_MountainCar.ipynb`: Last notebook in which the previous is applied in a simplified manner to the continuous game `MountainCar`.
+
+In the following, the commands of the second notebook on the continuous game `CartPole` are summarized; a discrete game is equivalent to it but without the discretization.
+
+[CartPole](https://gym.openai.com/envs/CartPole-v1/): `./02_QLearning/02_2_QLearning_Continuous_Cartpole.ipynb`
+
+
+```python
+
+## --- 1. Basic Setup
+
+import time
+import gym
+import matplotlib.pyplot as plt
+
+#%matplotlib notebook
+
+env = gym.make("CartPole-v1")
+env.reset()
+
+for step in range(100):
+    env.render()
+    action = env.action_space.sample() # 0 or 1
+    # 4 observations done each step:
+    # cart position, cart velocity, pole angle, pole angular velocity
+    observation,reward,done,info = env.step(action)
+    print(f'Observation: {observation}')
+    time.sleep(0.02)
+    if done:
+        break
+env.close()
+
+## --- 2. Q Table Discretization
+
+# See section above on the required dimensions and their sizes
+
+import numpy as np
+t = np.zeros((3,3,3,3,2))
+
+# We create ranges/bins for all observations
+# The more bins we have, the more accurate the system will be
+# but the more it is going to require to learn
+def create_bins(num_bins_obs = 10):
+    # Note that a bins vector with 6 range values leads to 6-1=5 bins!
+    # Therefore, if we want n bins, linspace needs to create n+1 range values
+    #n = num_bins_obs
+    n = num_bins_obs+1
+    bins_cart_pos = np.linspace(-2.4,2.4,n)
+    # We can have values in (-inf,inf), but after playing a bit we see values are usually in (-5,5)
+    bins_cart_vel = np.linspace(-5,5,n)
+    bins_pole_angle = np.linspace(-0.209,0.209,n)
+    # We can have values in (-inf,inf), but after playing a bit we see values are usually in (-5,5)
+    bins_pole_ang_vel = np.linspace(-5,5,n)
+    bins = np.array([bins_cart_pos,
+                     bins_cart_vel,
+                     bins_pole_angle,
+                     bins_pole_ang_vel])
+    return bins
+
+NUM_BINS = 10
+BINS = create_bins(NUM_BINS)
+
+# We create a function that uses that digitize utility
+def discretize_observation(observations,bins):
+    # bin indices for the observations
+    binned_observations = []
+    for i,observation in enumerate(observations):
+        discretized_observation = np.digitize(observation,bins[i,:])
+        # np.discretize() yields indices starting at 1
+        # thus, we need to decrease it
+        discretized_observation = discretized_observation-1
+        # check that we are in range: index in [0,NUM_BINS-1]
+        if discretized_observation < 0:
+            discretized_observation = 0
+        # recall BINS/bins contains n+1 range values, n being the number of bins
+        # thus, we substract 2 units
+        elif discretized_observation > bins.shape[1]-2:
+            discretized_observation = bins.shape[1]-2
+        binned_observations.append(discretized_observation)
+    return tuple(binned_observations)
+
+observations = env.reset()
+observations
+
+discretize_observation(observations,BINS)
+
+# We create the multidimensional Q Table
+q_table_shape = (NUM_BINS,NUM_BINS,NUM_BINS,NUM_BINS,env.action_space.n)
+q_table = np.zeros(q_table_shape)
+q_table.shape
+
+## --- 3. Functions and Hyperparameters
+
+# Hyperparameters
+EPOCHS = 20000
+ALPHA = 0.8
+GAMMA = 0.9
+# Hyperparameters: epsilon (exploration vs exploitation)
+EPSILON = 1.0
+burn_in = 1
+epsilon_end = 10000
+#epsilon_reduce = 0.0001
+epsilon_reduce = 1.0 / epsilon_end
+
+# Epsilon greedy action selection
+def epsilon_greedy_action_selection(epsilon,q_table,discrete_state):
+    random_number = np.random.random()
+    # Exploitation: choose action that maximizes Q
+    if random_number > epsilon:
+        # Grab state action row, with all Q values
+        state_row = q_table[discrete_state]
+        # Select the action index which has the largest Q value
+        action = np.argmax(state_row)
+    # Exploration: choose a random action
+    else:
+        action = env.action_space.sample()
+    return action
+
+# Q-Learning update equation
+# Q_next = Q_old + ALPHA*Q_error
+# Q_error = reward + GAMMA*Q_optimum - Q_old
+def compute_next_q_value(old_q_value,reward,next_optimal_q_value):
+    Q_error = reward + GAMMA*next_optimal_q_value - old_q_value
+    Q_next = old_q_value + ALPHA*Q_error
+    return Q_next
+
+# Epsilon exponential decay after each episode/epoch
+def reduce_epsilon(epsilon,epoch):
+    # Exponential decay
+    #return min_epsilon + (max_epsilon-min_epsilon)*np.exp(-decay_rate*epoch)
+    # Linear decay with a hard stop at a certain number of epochs
+    if burn_in <= epoch <= epsilon_end:
+        epsilon -= epsilon_reduce
+    return epsilon
+
+# Consider that the CartPole environment gives a +1 reward for each step if game is not terminated
+# We can actually punish/modify that reward with any logic we would like
+# For instance, punish high angular velocities, etc.
+# It makes sense to have these kind of reward modifiers when we start having complex environments
+def fail(done,points,reward):
+    if done and points < 150:
+        reward = -200
+    return reward
+
+## --- 4. Training
+
+%matplotlib inline
+log_interval = 1000
+render_interval = 30000 # env.render()
+####################################
+fig = plt.figure()
+ax = fig.add_subplot(111)
+plt.ion() # interactive mode on
+fig.canvas.draw()
+####################################
+points_log = []
+mean_points_log = []
+epochs = []
+for epoch in range(EPOCHS):
+    initial_state = env.reset()
+    # Discretization
+    discretized_state = discretize_observation(initial_state,BINS)
+    done = False
+    points = 0
+    epochs.append(epoch)
+    # Play the game
+    while not done:
+        action = epsilon_greedy_action_selection(EPSILON,q_table,discretized_state)
+        next_state,reward,done,info = env.step(action)
+        # Modify/punish reward
+        reward = fail(done,points,reward)
+        # Discretization
+        next_state_discretized = discretize_observation(next_state,BINS)
+        # Tuple concatenation: (o1,o2,o3,o4) + (action,) -> (o1,o2,o3,o4,action)
+        old_q_value = q_table[discretized_state + (action,)]
+        next_optimal_q_value = np.max(q_table[next_state_discretized])
+        next_q = compute_next_q_value(old_q_value,reward,next_optimal_q_value)
+        q_table[discretized_state + (action,)] = next_q
+        discretized_state = next_state_discretized
+        points += 1
+    EPSILON = reduce_epsilon(EPSILON,epoch)
+    points_log.append(points)
+    running_mean = round(np.mean(points_log[-30:]),2) # rolling average
+    mean_points_log.append(running_mean)
+    ####################################
+    if epoch % log_interval == 0:
+        #print(f"{episode} games played; accumulated reward: {np.sum(rewards)}")
+        ax.clear()
+        ax.scatter(epochs,points_log)
+        ax.plot(epochs,points_log)
+        ax.plot(epochs,mean_points_log,label=f'Running Mean: {running_mean}')
+        plt.legend()
+        fig.canvas.draw()
+    ####################################
+env.close()
+
+##  --- 5. Utilization of the Learned Q Table
+
+observation = env.reset()
+rewards = 0
+
+for step in range(1000):
+    env.render()
+    discrete_state = discretize_observation(observation,BINS)
+    action = np.argmax(q_table[discrete_state])
+    observation,reward,done,info = env.step(action)
+    rewards += 1
+    if done:
+        print(f'Reward points: {rewards}')
+        break;
+env.close()
+
+```
