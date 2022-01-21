@@ -751,22 +751,77 @@ ANNs are used to estimate:
 - We select a cell/state $s$
 - We predict with the network its value and the value of its neighbors
 - We compute the value of the cell according to the Bellman equation
-- We have now a datapoint: the coordinates and the Bellman value
-- We compute the error as the difference between the initial guessed value and the Bellman value with the neighbor values
+- We have now a datapoint: the coordinates and the Bellman value! (x,y,V)
+- We compute the error as the squared difference between the initial guessed value and the Bellman value with the neighbor values
 - We apply backpropagation
 - If these steps are repeated enough times, the state value predictions converge!
+
+Note that we converted our unsupervised learning problem in a supervised learning one.
 
 ![Value networks](./pics/value_networks.png)
 
 **Policy networks** get the coordinates $(x,y)$ of a state/cell $s$ and output the probability for each of the possible actions $\pi(a_i|s)$, in other words, the stochastic policy. The underlying assumption is that close states will have close policies. They are trained wandering the environment. They are trained as follows:
-- We get a path from the network: we predict the policies for the cells and follow the path with the highest probability until we end in a terminal cell.
-- We assign **gain** values to each cell backwards starting from the terminal cell: gains are assigned according to Bellman, that is, we basically decrease the final cell value at each step backwards with the reward.
-- Our sample datapoints consist of: coordinates, action taken and gain.
+- We get a path from the network: we predict the policies for the cells and follow the path with the highest probability until we end in a terminal cell. It can be a 
+- We assign **gain** values to each cell backwards starting from the terminal cell: gains are assigned according to Bellman, that is, we basically decrease the final cell value at each step backwards with the reward: `4, 3, 2, 1, 0, -1, ...`
+- Our sample datapoints consist of: coordinates x & y, action taken and gain.
 - Since we achieved the target, we force the network to increase the action probabilities that yielded it, but with a trick: The gain is multiplied to the weight update during network optimization. That way, only high gains are really reinforced.
 
+Similarly, note that we converted our unsupervised learning problem in a supervised learning one.
+
 ![Policy networks](./pics/policy_networks.png)
+![Policy networks](./pics/policy_networks_2.png)
 
 Thanks to these networks, we don't need to see all possible states during training.
 I understand the network interpolates values according to past state-value or state-policy pairs.
-Note that we have two separate networks, but we will link them.
+
+However, note that these network definitions are conceptual. In practice, we often use the **Q Network** and the **target network**, which have different inputs and ouputs, but which act as the value network and the policy network. Additionally, note that the Q network and the target network share their weights with a delay, as explained later.
+
+### Experience Replay / Replay Buffer
+
+In the cycle of a typical RL application, DQN is plugged into the process as a system that ultimately provides action choices.
+
+The following figure shows how that happens:
+
+![DQN Process](./pics/dqn_process.png)
+
+We store past experiences in a **replay buffer**.
+An experience is defined for time t as: current state/observations, action performed, reward, next state after action.
+Then, experiences in our buffer/pool are going to be sampled, concatenated in mini-batches and used for training.
+These mini-batches are passed to a **Q-Network**, which outputs a Q value.
+After that, we can either explore or exploit, leadng to the respective action choice.
+
+#### Why experience buffers? Because we want to simulate IID data
+
+Regular supervised learning models expect IID data: independent and identically distributed.
+However, **in RL, data is generated online and streamed in sequences of events that are dependent on each other, not IID!**
+Therefore, we use the experience buffer as follows:
+
+- A deque (double-ended queue) is created with space for `N` consecutive experiences. Typical ranges vary from 10,000 (e.g., Cartpole) to 10,000,000 (e.g., complex Atari games) experiences, depending on the memory available.
+- When the deque is full, the oldest experience is removed from the head and the newest one added to the tail. Thus, the experience buffer is being updated in parallel.
+- For training, mini-batches from the experiece buffer are selected randomly; a mini-batch is a subset of the current complete queue.
+
+**Therefore, instead of feeding dependent sequences of data, will create a history and sample from it. That decreases the shortcoming related to the IID property.**
+
+We will define an experience as a tuple like this:
+
+`exp = (S_t, A_t, R_t+1, S_t+1)`
+
+- `S_t`: state of the current experience at time `t`
+- `A_t`: action taken at current time `t`
+- `R_t+1`: reward received after transitioning from `t` to `t+1`
+- `S_t+1`: new state at time `t+1`
+
+### Q Network & Target Network
+
+The training of models within a RL framework has an additional issue to the lack of IID data: **every action taken at time `t` potentially changes the data and targets at time `t+1`**.
+
+To overcome that issue, two cloned networks are used:
+
+- The **Q Network**, which predicts the Q value for every action given an experience.
+- The **Target Network**, which is a clone of the Q network with weights frozen for a sequence of experiences fed to the Q network. After that sequence, the weights are copied from the Q network. The idea is to have stable and fixed outcomes for training the Q network.
+
+For each experience `(S_t, A_t, R_t+1, S_t+1)`, we pass to the Q network `S_t` and expect from it the Q values for all possible actions: `A0 (right), A1 (down), A2 (left), A3 (up)`:
+
+![Q Network](./pics/q_network.png)
+
 
