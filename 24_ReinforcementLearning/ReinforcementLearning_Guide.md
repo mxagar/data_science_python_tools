@@ -760,6 +760,8 @@ Note that we converted our unsupervised learning problem in a supervised learnin
 
 ![Value networks](./pics/value_networks.png)
 
+![Value network error computation](./pics/value_network_error.png)
+
 **Policy networks** get the coordinates $(x,y)$ of a state/cell $s$ and output the probability for each of the possible actions $\pi(a_i|s)$, in other words, the stochastic policy. The underlying assumption is that close states will have close policies. They are trained wandering the environment. They are trained as follows:
 - We get a path from the network: we predict the policies for the cells and follow the path with the highest probability until we end in a terminal cell. It can be a 
 - We assign **gain** values to each cell backwards starting from the terminal cell: gains are assigned according to Bellman, that is, we basically decrease the final cell value at each step backwards with the reward: `4, 3, 2, 1, 0, -1, ...`
