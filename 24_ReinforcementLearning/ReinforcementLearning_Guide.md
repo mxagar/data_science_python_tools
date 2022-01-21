@@ -720,14 +720,14 @@ Some notes on the meaning of terms:
 
 ### History of DQN
 
-- 1992: IBM develops a TD-Backgammon agent/algorithm (TD: Temporal Difference ~ Q-Learning); they trained an ANN and learned to play Backgammon. Unknown strategies emerged that were not popular at the time.
+- 1992: IBM develops a TD-Backgammon agent/algorithm (TD: Temporal Difference ~ Q-Learning); they trained an ANN and learned to play Backgammon. Unknown game strategies emerged that were not popular at the time.
 - 2010: DeepMind popularized RL: they started implementing DQNs to play Atari games; they also attached CNNs to RL agents to understand images.
 - 2014 DeepMind is acquired by Google
 - Some of the milestones since then
   - `AlphaGo` RL prgram that beat the Go world champion
-  - `[AlphaZero`: RL program able to play chess & go, among other
-  - `[AlphaStar`: RL program that plays StarCraft II
-  - `[AlphaFold`: Protein structure prediction
+  - `AlphaZero`: RL program able to play chess & go, among others
+  - `AlphaStar`: RL program that plays StarCraft II
+  - `AlphaFold`: Protein structure prediction
 
 ### Review of RL Concepts
 
@@ -735,9 +735,9 @@ Recall these concepts from previous sections.
 
 - The RL cycle (see Section 2): environment, agent, action (according to our policy), reward, observation, state update.
 - Q-Table: `states x actions`. **Limitations**:
-  - As we increase the size of the discrete world, thenumber of states explodes.
+  - As we increase the size of the discrete world, the number of states explodes.
   - Some games, such as the Packman, might not have well-defined states.
-  - Even if we manage to define all states, the agent must visit dduring training all those states...
+  - Even if we manage to define all states, the agent must visit during training all those states...
 - The Bellman Equation.
 - Deterministic vs. stochastic policies.
 
@@ -747,7 +747,7 @@ ANNs are used to estimate:
 - State values
 - Policies (stochastically)
 
-**Value networks** get the coordinates $(x,y)$ of a state/cell $s$ and output its value $V(s)$. The underlying assumption is that close states will have close values. They are trained wandering the environment and forcing the network to yield values compliant with the Bellman equation. This works in practice a s follows:
+**Value networks** get the coordinates $(x,y)$ of a state/cell $s$ and output its value $V(s)$. The underlying assumption is that close states will have close values. They are trained wandering the environment and forcing the network to yield values compliant with the Bellman equation. This works in practice as follows:
 - We select a cell/state $s$
 - We predict with the network its value and the value of its neighbors
 - We compute the value of the cell according to the Bellman equation
@@ -769,3 +769,4 @@ ANNs are used to estimate:
 Thanks to these networks, we don't need to see all possible states during training.
 I understand the network interpolates values according to past state-value or state-policy pairs.
 Note that we have two separate networks, but we will link them.
+
