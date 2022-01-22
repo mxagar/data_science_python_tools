@@ -826,4 +826,20 @@ For each experience `(S_t, A_t, R_t+1, S_t+1)`, we pass to the Q network `S_t` a
 
 ![Q Network](./pics/q_network.png)
 
+The basis difference of the error of the **Q network** used in the backpropagation is computed with the following term (I understand it can be squared later):
 
+`error = Q* - Q(S_t,A_t)`
+
+Where:
+
+- `Q(S_t,A_t)` is the `Q` output of the Q network associated to the `A_t` of the current experience.
+- `Q*` is the `Qmax` we used to have in our Q table; now, we don't have a table. Instead, we use the fact that we know `S_t+1`: we feed `S_t+1` to a parallel **target network** which copies its weights from the Q network every a number of given steps/passes. Two networks are used because carrying out two forward passes on the same network before backpropagation is unusual; performing backpropagation twice does not make sense either, because the `Q` values change after changing the weights.
+
+The **target network** is periodically updated; most of the time its weights are frozen, i.e., its outputs are stationary; with a given frequency (e.g., every 100 steps), the weights from the Q network are copied. For that, the following Keras/Tensorflow fuctions are used:
+- `clone_model()` applied to the Q network to clone it to be the target network
+- `get_weights()` applied to the Q network to get its weights
+- `set_weights()`: weights of the Q network copied/set to the target network
+
+All in all, it is as if
+- the target network is the value network
+- the Q network is the policy network
