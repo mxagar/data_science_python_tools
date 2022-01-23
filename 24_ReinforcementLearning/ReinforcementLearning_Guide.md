@@ -815,6 +815,8 @@ We will define an experience as a tuple like this:
 
 ### Q Network & Target Network
 
+**Note: This section is not consistent with the implementation in `03_1_DQN_Manual_Cartpole.ipynb`. There is a misunderstanding here or in the code. I think the main idea is correct, though. See the notebook.**
+
 The training of models within a RL framework has an additional issue to the lack of IID data: **every action taken at time `t` potentially changes the data and targets at time `t+1`**.
 
 To overcome that issue, two cloned networks are used:
@@ -826,7 +828,11 @@ For each experience `(S_t, A_t, R_t+1, S_t+1)`, we pass to the Q network `S_t` a
 
 ![Q Network](./pics/q_network.png)
 
-The basis difference of the error of the **Q network** used in the backpropagation is computed with the following term (I understand it can be squared later):
+The error used in the backpropagation is computed from the Bellman equation:
+
+$[V(s) - \max_a{(R(s,a) + \gamma V(s'))}]^2$
+
+The basis difference of the error (without squaring it) is:
 
 `error = Q* - Q(S_t,A_t)`
 
