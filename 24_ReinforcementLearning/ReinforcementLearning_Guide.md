@@ -1072,3 +1072,69 @@ for counter in range(500):
 env.close()
 
 ```
+
+## 6. Deep Q-Learning on Images
+
+In real world problems we often don't have clear observation definitions and observation-related streams of data. Instead, we rely on images and learn from them. That is the motivation of this section, in which a simplified version of the original DQN paper for the Atari Breakout game is implemented. However, note that until 2020 DQN agents have not achieved beyong human performance on all 57 Atari games.
+
+`./literature/`:
+
+```bibtex
+@article{DQNNaturePaper,
+  title={Human-level control through deep reinforcement learning},
+  author={Mnih, Volodymyr and Kavukcuoglu, Koray and Silver, David and Rusu, Andrei A and Veness, Joel and Bellemare, Marc G and Graves, Alex and Riedmiller, Martin and Fidjeland, Andreas K and Ostrovski, Georg and others},
+  journal={nature},
+  volume={518},
+  number={7540},
+  pages={529--533},
+  year={2015},
+  publisher={Nature Publishing Group}
+}
+
+@article{Original_DQN_Paper,
+  title={Playing atari with deep reinforcement learning},
+  author={Mnih, Volodymyr and Kavukcuoglu, Koray and Silver, David and Graves, Alex and Antonoglou, Ioannis and Wierstra, Daan and Riedmiller, Martin},
+  journal={arXiv preprint arXiv:1312.5602},
+  year={2013}
+}
+
+@inproceedings{Agent57_Paper,
+  title={Agent57: Outperforming the atari human benchmark},
+  author={Badia, Adri{\`a} Puigdom{\`e}nech and Piot, Bilal and Kapturowski, Steven and Sprechmann, Pablo and Vitvitskyi, Alex and Guo, Zhaohan Daniel and Blundell, Charles},
+  booktitle={International Conference on Machine Learning},
+  pages={507--517},
+  year={2020},
+  organization={PMLR}
+}
+```
+
+### 6.1 DQN Nature Paper: My notes
+
+### 6.2 Processing Images
+
+#### 6.2.1 Color & Scale
+
+Eventhough an image has 3 channels and Google/Deepmind used them all, we are going to use grayscale images for simplification; those simplifications are done considering the human limits: if a human is able to play with the simplification, then we apply it. Additionally, we are going to scale the images to be `80x80` pixels.
+
+![Breakout: simplification of images for the DQN](./pics/breakout_simplification_dqn.png)
+
+These simplifications need to be applied every time the model is used, also during final usage.
+
+#### 6.2.2 Motion
+
+In order to understand the motion and game dynamics, we need to pass a complete set of images that occur during a window of time to the model (or, previously, to the replay buffer). A single frame is not necessary, because the speed and motion direction cannot be obtained from them.
+
+Thus, we implement the following:
+- a sequence of images is appended to the deque/buffer every time, which constitute a time window of observations
+- when the buffer is sampled, these windows are sampled
+- a complete window of image is passed to the model
+
+The window length (number of frames) is a hyperparameters; the larger, the more data, the more memory and time required. Its size depends on the maximum delay we have from an action and its latest effects we would like to learn.
+
+All that iimage processing cann be done in a one-liner.
+However, for learning purposes, it is also done manually in the following notebook (not explained here):
+
+`04_1_DQN_Images_Processinng_Images.ipynb`
+
+### 6.3 DQN Agent implementation: `notebook`
+
