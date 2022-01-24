@@ -15,29 +15,74 @@ In addition to the notebooks in here, this course reviews other introductory con
 **Overview**:
 1. Introduction and Setup
 2. Reinforcement Learning Concepts
+   - 2.1 Markov Decision Process in a Gridworld and the Bellman Equation
+   - 2.2 Deterministic vs. Stochastic Policies
+   - 2.3 Neural Netowks for Value & Policy Prediction
 3. OpenAI Gym Overview
+   - 3.1 OpenAI Gym Documentation
+   - 3.2 Gym Environments: Overview - `01_OpenAI_Gym_Overview.ipynb`
+     - 3.2.1 Atari Breakout Game
+     - 3.2.2 Mountain Car
 4. (Classical) Q-Learning
-5. Deep Q-Learning
+   - 4.1 Intuition
+   - 4.2 Q Function
+   - 4.3 Computing the Q Function and the Q-Learning Table
+   - 4.4 Continuous Environments
+   - 4.5 Implementation Notebooks
+     - `02_1_QLearning_Discrete_FrozenLake.ipynb`
+     - `02_2_QLearning_Continuous_Cartpole.ipynb`
+     - `02_3_QLearning_Continuous_MountainCar.ipynb`
+   - 4.6 Final Remarks
+5. Deep Q-Learning (DQN)
+   - 5.1 History of DQN
+   - 5.2 Review of RL Concepts
+   - 5.3 Core Idea of DQN: Overcome the shortcoming of Q-Learning
+   - 5.4 Experience Replay / Replay Buffer
+   - 5.5 Q Network & Target Network
+   - 5.6 Implementation Examples
+     - `03_1_DQN_Manual_Cartpole.ipynb`
+     - `03_2_DQN_KerasRL2_Cartpole.ipynb`
+     - `03_3_DQN_KerasRL2_Acrobot.ipynb`
 6. Deep Q-Learning on Images
 7. Creating Custom OpenAI Gym Environments
 
 ## 1. Introduction and Setup
 
+Apple M1:
+
 ```bash
 conda env list
+# conda create -n tf tensorflow
+# Watch out: currently (2022-01-24) only TF 2.0 supported on Apple M1?
 conda activate tf
-pip install jupyter numpy matplotlib 
+conda install jupyter jupyterlab numpy pandas scikit-learn matplotlib seaborn pip -y
 # Install OpenAI Gym base library
 pip install gym
 # By default, only the classic control family is installed
 # We need to install specific environment families manually
 # Note that I had issues installing Box2D and MuJoCo
-pip install 'gym[atari,accept-rom-license]'
+pip install "gym[atari,accept-rom-license]"
 pip install pygame
+pip install pyglet
 # We can also do in a Jupyter notebook: `!pip install gym`
-# And we can also install stuff using Anaconda
-conda install lxml pandas pillow scikit-learn seaborn tensorflow
+# Watch out: no keras-rl2 support for TF < 2.1
 ```
+
+Windows PC:`
+```bash
+conda env list
+# conda create -n tf tensorflow
+conda activate tf
+conda install jupyter jupyterlab numpy pandas scikit-learn matplotlib seaborn pip -y
+pip install tensorflow==2.6.2
+pip3 install gym
+pip install "gym[atari,accept-rom-license]"
+pip install pygame
+pip install pyglet
+pip install keras-rl2
+    # Watch out: repository is archived
+```
+
 
 Introductory sections, not covered here:
 - Numpy: `~/Dropbox/Learning/PythonLab/python_manual.txt`
@@ -71,7 +116,7 @@ Important elements:
 
 Typical example: Cart pole (in Spanish, *péndulo invertido*): The goal is to maintain the cart pole upright by moving the cart left/right; we get an observation of the pole's angle after our moving action and a reward is accordingly assigned depending on its angle.
 
-### Markov Decision Process in a Gridworld and the Bellman Equation
+### 2.1 Markov Decision Process in a Gridworld and the Bellman Equation
 
 I wrote this section after reading Wikipedia articles and watching the following video:
 
@@ -116,7 +161,7 @@ That is so because the state space might be very large to sweep and propagate al
 
 The discount factor models tha fact that a state value in future steps will loose its value (because we are less sure); in our case, it can be considered $\gamma = 1$ for simplicity.
 
-### Deterministic vs. Stochastic Policies
+### 2.2 Deterministic vs. Stochastic Policies
 
 A **deterministic policy** maps a state to an action.
 
@@ -130,7 +175,7 @@ That is also known as **exploitation** (one deterministic action) vs **explorati
 
 ![Deterministic vs. stochastic policies (by Luis Serrano)](pics/stochastic_vs_deterministic.png)
 
-### Neural Netowks for Value & Policy Prediction
+### 2.3 Neural Netowks for Value & Policy Prediction
 
 Since computing the **state values** $V(s)$ and the **action policies** (i.e., which actions to take in each state) might be very expensive for large worlds, one can train neural networks that predict them given past history; that is the key idea behind Deep Reinforcement Learning.
 
@@ -173,7 +218,7 @@ June 2019: GPT-2 is announced, but no code/model provided - the reason according
 
 2021: DALL-E paper is published by OpenAI: very nice Text-to image model. The model is not public.
 
-### OpenAI Gym Documentation
+### 3.1 OpenAI Gym Documentation
 
 The documentation page of OpenAI does not have extensive information:
 
@@ -188,7 +233,7 @@ The most important part is the one related to the environments; when we select o
 - Robotics: the Dactyl is here.
 - Third party envs (link is broken at the moment).
 
-### Gym Environments: Overview - `01_OpenAI_Gym_Overview.ipynb`
+### 3.2 Gym Environments: Overview - `01_OpenAI_Gym_Overview.ipynb`
 
 See notebook
 
@@ -212,7 +257,7 @@ Typical methods we need to know:
     - `render("human")`: images rendered, for human beings
     - `render("rgb_array")`: numpy RGB array; for computers or visualizing with matplotlib
 
-#### 1. Atari Breakout Game
+#### 3.2.1 Atari Breakout Game
 
 Popular Atari game in which we m ove paddle so that we hit a ball that collides agains a rainbow ball; collisions remove rainbow blocks (goal). If we miss hitting the ball, it falls down (avoid).
 
@@ -308,7 +353,7 @@ for step in range(200):
 env.close()
 ```
 
-#### 2. Mountain Car
+#### 3.2.2 Mountain Car
 
 A very famous testbed published by Moore in 1990: "A car is on a one-dimensional track, positioned between two mountains. The goal is to drive up the mountain on the right; however, the car's engine is not strong enough to scale the mountain in a single pass. Therefore, the only way to succeed is to drive back and forth to build up momentum."
 
@@ -373,7 +418,7 @@ The roots of Q-Learning are in children development studies by Jean Piaget; late
 
 If we use neural networks during the prediction phase of Q-Learning, we are carrying out **Deep Q-Learning** or **Deep Reinforcement Learning**. That term was coined by DeepMind in the 2010's.
 
-### Intuition
+### 4.1 Intuition
 
 Recall the cycle in Reinforcement Learning: an agent performs an action in the environment according to a policy, which leads to a reward and observations of state change; then, a policy update occurs, which should lead to better future actions in the direction of the final goal.
 
@@ -393,7 +438,7 @@ Unfortunately, the Q-Learning algorithm/table is not able to solve all problems,
 - It converges for discrete spaces only, not continuous ones; however, it is possible to meaningfully discretize some spaces.
 - It grows in size too much for realistic scenarios. Let's consider chess: it has 8x8 cells but much more states, since each piece location configuration is actually a state. Additionally, for each state, all possible actions need to be listed: any piece movement. Note that even the definition of all possible states and actions in chess is mathematically not solved.
 
-### Q Function
+### 4.2 Q Function
 
 See also Sutton & Barto (Reinforcement Learning -- An Introduction), Section 6.5.
 
@@ -446,7 +491,7 @@ The error term is the difference between the target value and the current value,
 
 The target $Q$ value comprises the maximum Q value in the next state for any given action. That term is multiplied by a discount factor which appears in the deduction of the formula to model the idea that later rewards have less value.
 
-### Computing the Q Function and the Q-Learning Table
+### 4.3 Computing the Q Function and the Q-Learning Table
 
 We initialize the table with `0` or very small values.
 We let the game play by just taking random actions.
@@ -462,7 +507,7 @@ That choice occurs in the term $\max_a{Q(S_{t+1},a)}$: we can take the action wi
 That balance between exploration vs exploitation is controlled with the hyperparameter `epsilon`, which is defined to decay (exponentially) over time: epsilon dictates the probability of taking a random action or the best known one.
 This is known as the **greedy epsilon choice**.
 
-### Continuous Environments
+### 4.4 Continuous Environments
 
 In a discrete environment like `FrozenLake` we have one discrete observation which maps to a unique state variable. In a continuous environment we can have we have `n` continuous observation variables and they map to one state. Also, recall that the Q-Learning table is `state x action`.
 
@@ -470,7 +515,7 @@ To address that issue, we discretize each observation variable in bins and build
 
 - We build a multidimensional matrix/array: dimensions are `observations + action`. Each observation dimension is discretized/binned in all defined ranges and the action dimension contains all possible actions; then, each combination of `observations + action` has a Q value. Thus, 4 observation values lead to a dimension of 5 (`observations + action`). Each dimension has the size of the number of bins or the number of actions. Example: 4 observations, each one with 3 bins and additionally 2 actions: `np.zeros((3,3,3,3,2))`. Then, each cell maps to a possible Q value.
 - Note that combining observations and bins we get all the states. Thus, we can further develop the structure above to have `3^4` states and `2` actions. However, the multidimensional array is more comfortable. 
-### Implementation Notebooks
+### 4.5 Implementation Notebooks
 
 Altogether, three notebooks are available in `./02_QLearning`; in the following a brief explanation of them is provided:
 
@@ -697,7 +742,7 @@ env.close()
 
 ```
 
-### Final Remarks
+### 4.6 Final Remarks
 
 I skimmed through these posts
 - [Stackoverflow: Q-Learning](https://stackoverflow.com/questions/34181056/q-learning-vs-temporal-difference-vs-model-based-reinforcement-learning)
@@ -711,14 +756,14 @@ And these are the unchecked conclusions I came up with:
   - SARSA: Q update and action choice are done according to an epsilon-greeedy policy, i.e., if epsilon is not  `0` exploration is done.
   - Q-Learning: action choice is epsilon-greedy, but Q update is greedy: no exploration is done and the max is taken.
 
-## 5. Deep Q-Learning
+## 5. Deep Q-Learning (DQN)
 
 Some notes on the meaning of terms:
 - Deep Q-Learning = DQN.
 - Deep Reinforcement Learning is Reinforcement Learning when (Deep) Neural Networks are involved; it is a broader topic than DQN, since there are some other techniques other than Q-Learning in Reinforcement Learning.
 - Deep Q-Learning is more specific: it refers to the fact when Deep Learning is applied to Q-Learning.
 
-### History of DQN
+### 5.1 History of DQN
 
 - 1992: IBM develops a TD-Backgammon agent/algorithm (TD: Temporal Difference ~ Q-Learning); they trained an ANN and learned to play Backgammon. Unknown game strategies emerged that were not popular at the time.
 - 2010: DeepMind popularized RL: they started implementing DQNs to play Atari games; they also attached CNNs to RL agents to understand images.
@@ -729,7 +774,7 @@ Some notes on the meaning of terms:
   - `AlphaStar`: RL program that plays StarCraft II
   - `AlphaFold`: Protein structure prediction
 
-### Review of RL Concepts
+### 5.2 Review of RL Concepts
 
 Recall these concepts from previous sections.
 
@@ -741,7 +786,7 @@ Recall these concepts from previous sections.
 - The Bellman Equation.
 - Deterministic vs. stochastic policies.
 
-### Core Idea of DQN: Overcome the shortcoming of Q-Learning
+### 5.3 Core Idea of DQN: Overcome the shortcoming of Q-Learning
 
 ANNs are used to estimate:
 - State values
@@ -778,7 +823,7 @@ I understand the network interpolates values according to past state-value or st
 
 However, note that these network definitions are conceptual. In practice, we often use the **Q Network** and the **target network**, which have different inputs and ouputs, but which act as the value network and the policy network. Additionally, note that the Q network and the target network share their weights with a delay, as explained later.
 
-### Experience Replay / Replay Buffer
+### 5.4 Experience Replay / Replay Buffer
 
 In the cycle of a typical RL application, DQN is plugged into the process as a system that ultimately provides action choices.
 
@@ -813,7 +858,7 @@ We will define an experience as a tuple like this:
 - `R_t+1`: reward received after transitioning from `t` to `t+1`
 - `S_t+1`: new state at time `t+1`
 
-### Q Network & Target Network
+### 5.5 Q Network & Target Network
 
 **Note: This section is not consistent with the implementation in `03_1_DQN_Manual_Cartpole.ipynb`. There is a misunderstanding here or in the code. I think the main idea is correct, though. See the notebook.**
 
@@ -849,3 +894,156 @@ The **target network** is periodically updated; most of the time its weights are
 All in all, it is as if
 - the target network is the value network
 - the Q network is the policy network
+
+### 5.6 Implementation Examples
+
+Altogether, the code is implemented in three notebooks, but only one is summarized here, as explained in the following:
+
+1. `03_1_DQN_Manual_Cartpole.ipynb`: 
+2. `03_2_DQN_KerasRL2_Cartpole.ipynb`:
+3. `03_3_DQN_KerasRL2_Acrobot.ipynb`:
+
+
+`03_2_DQN_KerasRL2_Cartpole.ipynb`:
+
+Usually, DQN agents are not programmed manually, as in `03_1_DQN_Manual_Cartpole.ipynb`. Instead, abstraction libraries are used on top of OpenAI Gym and Keras. There are many libraries available, the one used in the course is [Keras RL2](https://github.com/taylormcnally/keras-rl2), which requires TF >= 2.1.
+
+Note that Keras RL2 is basically Keras RL for Tensorflow 2 and that it is archived, i.e., not further developed; however, it seems to be a nice trade-off between abstraction and manual definition, optimizing for learning and understanding. Keras RL2 separates nicely:
+- the model: we just define one and internally is managed the other
+- replay memory/buffer: deque or circular array
+- policy: e.g., epsilon-greedy with decaying value
+- DQN agent: it takes all of the above and the environment and it is trained
+
+See:
+
+- Documentation link: [https://keras-rl.readthedocs.io/en/latest/](https://keras-rl.readthedocs.io/en/latest)
+- The documentation is not very extensive, but the examples are very nice; the examples are available on Github: [https://github.com/taylormcnally/keras-rl2/tree/master/examples](https://github.com/taylormcnally/keras-rl2/tree/master/examples)
+
+Some alternatives to Keras-RL2 would be:
+- OpenAI Baselines
+- TensorFlow Agents
+
+Overview of contents in the notebook:
+1. Imports and Setup
+2. Creating the ANN
+3. DQN Agent: Training
+4. Test
+
+```python
+
+## -- 1. Imports and Setup
+
+import time  # to reduce the game speed when playing manually
+import gym
+from pyglet.window import key  # for manual playing
+
+# Import TF stuff first, because Keras-RL2 is built on TF
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Activation
+from tensorflow.keras.layers import Flatten
+from tensorflow.keras.optimizers import Adam
+
+# Now the import the Keras-rl2 agent
+# See
+# https://keras-rl.readthedocs.io/en/latest/agents/overview/#available-agents
+# It is called rl, but it belongs to Keras-RL2
+from rl.agents.dqn import DQNAgent  # Use the basic Deep-Q-Network agent
+
+env_name = "CartPole-v0"
+env = gym.make(env_name)
+
+# Manual play
+env.reset()
+for _ in range(300):
+    env.render(mode="human") # render on screen
+    random_action = env.action_space.sample() # random action
+    env.step(random_action)
+env.close() # close
+
+## -- 2. Creating the ANN
+
+# Get number of actions
+n_actions = env.action_space.n
+# Get number of observations
+# Note it is a tuple of dim 1
+# We need Flatten to address that:
+# Flatten() takes (None, a, b, c), where None is the batch,
+# and it converts it to (None, a*b*c)
+# https://keras.io/api/layers/reshaping_layers/flatten/
+n_observations = env.observation_space.shape
+
+# We build the same model as in the previous notebook
+# but now, we also use Flatten
+model = Sequential()
+# Flatten() takes (None, a, b, c), where None is the batch,
+# and it converts it to (None, a*b*c)
+# https://keras.io/api/layers/reshaping_layers/flatten/
+model.add(Flatten(input_shape=(1,) + n_observations))
+model.add(Dense(16))
+model.add(Activation('relu'))
+model.add(Dense(32))
+model.add(Activation('relu'))
+model.add(Dense(n_actions))
+model.add(Activation('relu'))
+
+model.summary()
+
+## -- 3. DQN Agent: Training
+
+# Replay Buffer = Sequential Memory
+from rl.memory import SequentialMemory
+
+# limit: the size of the deque
+# window_length: it starts making sense with images; use 1 for non-visual data
+memory = SequentialMemory(limit=20000, window_length=1)
+
+# Policy
+# LinearAnnealedPolicy: linear decay
+# EpsGreedyQPolicy: with a linearly decaying epsilon, choose exploitation/exploration according to it
+from rl.policy import LinearAnnealedPolicy,EpsGreedyQPolicy
+
+# Policy of action choice
+# We use the epsilon-greedy policy, as always
+# Random (exploration) or best (exploitation) action chosen
+# depending on epsilon in [value_min, value_max], decreased by steps.
+# value_test: evaluation can be performed at a fixed epsilon (should be small: exploitation)
+# nb_steps: we match our sequential memory size
+policy = LinearAnnealedPolicy(EpsGreedyQPolicy(),
+                             attr='eps',
+                             value_max=1.0,
+                             value_min=0.1,
+                             value_test=0.05,
+                             nb_steps=20000)
+
+# DQN Agent
+# We now pass all elements we have to the agent;
+# beforehand, we coded all that manually, not anymore.
+# nb_steps_warmup: our burn_in = how many steps before epsilon starts decreasing
+# target_model_update: every how many epochs do we update the weights of the frozen model
+dqn = DQNAgent(model=model,
+              nb_actions=n_actions,
+              memory=memory,
+              nb_steps_warmup=10,
+              target_model_update=100,
+              policy=policy)
+
+# Compile the Agent
+# We need to pass the optimizer for the model and the metric(s)
+# 'mae': Mean Absolute Error
+dqn.compile(Adam(learning_rate=1e-3),metrics=['mae'])
+
+# Train
+# Note that it takes much much less than in the manual case, because it's optimized!
+# nb_steps: episodes
+dqn.fit(env,nb_steps=20000,visualize=False,verbose=1)
+
+# Save model weights in crompressed format: HDF5
+dqn.save_weights(f'dqn_{env_name}_krl2_weights.h5f',overwrite=True)
+
+## -- 4. Test
+
+dqn.test(env,nb_episodes=5,visualize=True)
+env.close()
+
+```
