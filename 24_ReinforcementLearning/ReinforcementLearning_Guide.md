@@ -899,9 +899,9 @@ All in all, it is as if
 
 Altogether, the code is implemented in three notebooks, but only one is summarized here, as explained in the following:
 
-1. `03_1_DQN_Manual_Cartpole.ipynb`: 
-2. `03_2_DQN_KerasRL2_Cartpole.ipynb`:
-3. `03_3_DQN_KerasRL2_Acrobot.ipynb`:
+1. `03_1_DQN_Manual_Cartpole.ipynb`: This notebook implements [CartPole](https://gym.openai.com/envs/CartPole-v1/) manually using Keras/TF 2. This notebook is interesting how to map the theoretical concepts in Section 5 to code. However, DQN agents are usually not implemented manually, rather using abstraction libraries, as in the next notebook. Additionally, either in the notebook or in the notes of this guide there are some errors, since both seem not to match. Therefore, directly use the next notebook.
+2. `03_2_DQN_KerasRL2_Cartpole.ipynb`: This notebook implements [CartPole](https://gym.openai.com/envs/CartPole-v1/) using a DQN agent based on Keras-RL2. It is th emost important notebook on DQN. A summary is provided below.
+3. `03_3_DQN_KerasRL2_Acrobot.ipynb`: This notebook implements [Acrobot](https://gym.openai.com/envs/Acrobot-v1/) using a DQN agent based on Keras-RL2; nothing new added here, only action and observation/state sizes are larger.
 
 
 `03_2_DQN_KerasRL2_Cartpole.ipynb`:
@@ -927,13 +927,14 @@ Overview of contents in the notebook:
 1. Imports and Setup
 2. Creating the ANN
 3. DQN Agent: Training
-4. Test
+4. Test & Use
 
 ```python
 
 ## -- 1. Imports and Setup
 
 import time  # to reduce the game speed when playing manually
+import numpy as np
 import gym
 from pyglet.window import key  # for manual playing
 
@@ -1021,6 +1022,7 @@ policy = LinearAnnealedPolicy(EpsGreedyQPolicy(),
 # beforehand, we coded all that manually, not anymore.
 # nb_steps_warmup: our burn_in = how many steps before epsilon starts decreasing
 # target_model_update: every how many epochs do we update the weights of the frozen model
+# Optional: batch_size, gamma
 dqn = DQNAgent(model=model,
               nb_actions=n_actions,
               memory=memory,
@@ -1041,9 +1043,32 @@ dqn.fit(env,nb_steps=20000,visualize=False,verbose=1)
 # Save model weights in crompressed format: HDF5
 dqn.save_weights(f'dqn_{env_name}_krl2_weights.h5f',overwrite=True)
 
-## -- 4. Test
+# Load weights
+# Note that we need to create the model and the DQN agent before loading the weights!
+dqn.load_weights(f'dqn_{env_name}_krl2_weights.h5f')
 
+## -- 4. Test & Use
+
+# Test
 dqn.test(env,nb_episodes=5,visualize=True)
+env.close()
+
+# We need to reshape the observation this way
+observation = env.reset()
+observation.reshape((1,1,4))
+
+# Use the model to carry out actions without Keras-RL2, only with the model
+observation = env.reset()
+for counter in range(500):
+    env.render()
+    print()
+    #action = np.argmax(model.predict(observation.reshape([1,4])))
+    action = np.argmax(model.predict(observation.reshape((1,1,4))))
+    observation, reward, done, info = env.step(action)
+    if done:
+        #pass
+        #print('done')
+        break
 env.close()
 
 ```
