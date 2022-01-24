@@ -68,7 +68,7 @@ pip install pyglet
 # Watch out: no keras-rl2 support for TF < 2.1
 ```
 
-Windows PC:`
+Windows PC:
 ```bash
 conda env list
 # conda create -n tf tensorflow
