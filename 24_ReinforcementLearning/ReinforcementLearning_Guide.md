@@ -66,6 +66,8 @@ pip install pygame
 pip install pyglet
 # We can also do in a Jupyter notebook: `!pip install gym`
 # Watch out: no keras-rl2 support for TF < 2.1
+# PIL / Pillow
+pip install pillow
 ```
 
 Windows PC:
@@ -1110,6 +1112,7 @@ In real world problems we often don't have clear observation definitions and obs
 
 ### 6.1 DQN Nature Paper: My notes
 
+TBD.
 ### 6.2 Processing Images
 
 #### 6.2.1 Color & Scale
@@ -1122,16 +1125,16 @@ These simplifications need to be applied every time the model is used, also duri
 
 #### 6.2.2 Motion
 
-In order to understand the motion and game dynamics, we need to pass a complete set of images that occur during a window of time to the model (or, previously, to the replay buffer). A single frame is not necessary, because the speed and motion direction cannot be obtained from them.
+In order to understand the motion and game dynamics, we need to pass a complete set of images that occur during a window of time to the model (or, previously, to the replay buffer). A single frame is not sufficient, because the speed and motion direction cannot be obtained from them.
 
 Thus, we implement the following:
 - a sequence of images is appended to the deque/buffer every time, which constitute a time window of observations
 - when the buffer is sampled, these windows are sampled
 - a complete window of image is passed to the model
 
-The window length (number of frames) is a hyperparameters; the larger, the more data, the more memory and time required. Its size depends on the maximum delay we have from an action and its latest effects we would like to learn.
+The window length (number of frames) is a hyperparameter; the larger, the more data, the more memory and time required. Its size depends on the maximum delay we have from an action and its latest effects we would like to learn.
 
-All that iimage processing cann be done in a one-liner.
+All that image processing can be done in a one-liner.
 However, for learning purposes, it is also done manually in the following notebook (not explained here):
 
 `04_1_DQN_Images_Processinng_Images.ipynb`
