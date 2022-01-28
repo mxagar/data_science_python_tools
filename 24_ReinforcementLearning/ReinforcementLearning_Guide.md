@@ -1150,10 +1150,220 @@ However, for learning purposes, it is also done manually in the following notebo
 
 ### 6.3 DQN Agent Implementation Examples
 
-Three notebooks are created: 
+Three notebooks are created, but the second is really the most important:
 
-- `04_1_DQN_Images_Processinng_Images.ipynb`
-- `04_2_DQN_Images_Keras_RL2_Breakout.ipynb`
-- `04_3_DQN_Images_Keras_RL2_Pong.ipynb`
+- `04_1_DQN_Images_Processinng_Images.ipynb`: The [Breakout](https://gym.openai.com/envs/Breakout-v0/) game is tried with a manually built replay buffer (using `deque`). Next notebook implements the same game using the abstraction library Keras-RL2.
+- `04_2_DQN_Images_Keras_RL2_Breakout.ipynb`: The agent learns to play the [Breakout](https://gym.openai.com/envs/Breakout-v0/) game with Keras-RL2. **This notebook contains basically the template to build a DQN agent that works with images**. Th ereplay buffer is built with Keras-RL2 an an image pre-procesing class is defined, also using Keras-RL2.
+- `04_3_DQN_Images_Keras_RL2_Pong.ipynb`: In this notebook a DQN agent learns to play the [Pong](https://gym.openai.com/envs/Pong-v0/) game. This notebook is basically the previous one with small modifications.
 
+
+In the following, the summary of the second notebook is provided:
+
+`04_2_DQN_Images_Keras_RL2_Breakout.ipynb`
+
+Note that we have 2 versions for the Atari games: the one with RAM contains relevant information on some object positions, etc.; the other has only images and a CNN should be applied to understand the object poses.
+
+Also, note that the Atari environments were removed from the Open AI gym github repo; they are now being maintained under the  Arcade-Learning-Environment repo: [Issue 2407](https://github.com/openai/gym/issues/2407). We can still install them with `pip install "gym[atari,accept-rom-license]"`, but the links to the source code at the Open AI environments website are broken.
+
+Further important links:
+
+- Atari environements were removed from OpenAI Gym and moved to the Arcade-Learning-Environment repo: [https://github.com/openai/gym/issues/2407](https://github.com/openai/gym/issues/2407)
+- Difference between v0, v4 & Deterministic: 
+[https://github.com/openai/gym/issues/1280](https://github.com/openai/gym/issues/1280)
+- Atari enviornment: [https://github.com/mgbellemare/Arcade-Learning-Environment/blob/master/src/gym/envs/atari/environment.py](https://github.com/mgbellemare/Arcade-Learning-Environment/blob/master/src/gym/envs/atari/environment.py)
+
+We choose the environment `BreakoutDeterministic-v4` following the comments from the link above: [Issue 1280](https://github.com/openai/gym/issues/1280)
+
+```python
+
+### --- 1. Imports
+
+# Image processing
+from PIL import Image
+import numpy as np
+import gym
+import random
+#from gym.utils import play
+
+# CNN
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Activation, Flatten, Convolution2D, Permute
+from tensorflow.keras.optimizers import Adam
+
+# Keras-RL2
+from rl.agents.dqn import DQNAgent
+from rl.policy import LinearAnnealedPolicy, EpsGreedyQPolicy
+from rl.memory import SequentialMemory
+from rl.core import Processor
+from rl.callbacks import FileLogger, ModelIntervalCheckpoint # for tracking results
+
+### --- 2. Environment Setup
+
+env_name = "BreakoutDeterministic-v4"
+env = gym.make(env_name)
+nb_actions = env.action_space.n
+
+env.unwrapped.get_action_meanings()
+
+### --- 3. Image Processing
+
+IMG_SHAPE = (84, 84)
+WINDOW_LENGTH = 4
+
+class ImageProcessor(Processor):
+    def process_observation(self, observation):
+        # numpy -> PIL
+        img = Image.fromarray(observation)
+        # scale / resize
+        img = img.resize(IMG_SHAPE)
+        # grayscale (luminiscence)
+        img = img.convert("L")
+        # PIL -> numpy
+        img = np.array(img)
+        # save storage (optional)
+        return img.astype('uint8')
+    def process_state_batch(self, batch):
+        # scale grayvalues to [0,1]
+        processed_batch = batch.astype('float32') / 255.0
+        return processed_batch
+    def process_reward(self, reward):
+        # clip reward to [-1,1]
+        return np.clip(reward, -1.0, 1.0)
+
+### --- 4. Network Model
+
+# We pass images in sequences of 4 frames!
+input_shape = (WINDOW_LENGTH, IMG_SHAPE[0], IMG_SHAPE[1])
+input_shape
+
+# Take into account that we have (4,84,84) arrays,
+# but if we look at the documentation of Convolution2D,
+# our convolutional network expects (BatchSize, 84, 84, 4).
+# Thus, we need to account for this: we use the Permute layer for that.
+
+model = Sequential()
+# Change dimension places: (4,84,84) --> (84,84,4)
+model.add(Permute((2, 3, 1), input_shape=input_shape))
+# 32 filters, 8x8 kernel size
+# Default kernel initialization is Glorot, but some publications report better results with He
+model.add(Convolution2D(32, (8, 8), strides=(4, 4),kernel_initializer='he_normal'))
+model.add(Activation('relu'))
+model.add(Convolution2D(64, (4, 4), strides=(2, 2), kernel_initializer='he_normal'))
+model.add(Activation('relu'))
+model.add(Convolution2D(64, (3, 3), strides=(1, 1), kernel_initializer='he_normal'))
+model.add(Activation('relu'))
+model.add(Flatten())
+model.add(Dense(512))
+model.add(Activation('relu'))
+model.add(Dense(nb_actions))
+model.add(Activation('linear'))
+print(model.summary())
+
+### --- 5. Agent
+
+# Replay buffer
+memory = SequentialMemory(limit=1000000, window_length=WINDOW_LENGTH)
+
+# Image processor
+processor = ImageProcessor()
+
+# Policy: Linear decay
+# Random (exploration) or best (exploitation) action chosen
+# depending on epsilon in [value_min, value_max], decreased by steps.
+# value_test: evaluation can be performed at a fixed epsilon (should be small: exploitation)
+# nb_steps: we match our sequential memory size
+policy = LinearAnnealedPolicy(EpsGreedyQPolicy(),
+                              attr='eps',
+                              value_max=1.0,
+                              value_min=0.1,
+                              value_test=.05,
+                              nb_steps=1000000)
+
+# DQN Agent
+# We now pass all elements we have to the agent;
+# nb_steps_warmup: our burn_in = how many steps before epsilon starts decreasing
+# target_model_update: every how many epochs do we update the weights of the frozen model
+# Optional: batch_size, gamma
+dqn = DQNAgent(model=model,
+               nb_actions=nb_actions,
+               policy=policy,
+               memory=memory,
+               processor=processor,
+               nb_steps_warmup=50000,
+               gamma=.99,
+               target_model_update=10000,
+               train_interval=4,
+               delta_clip=1)
+
+# We need to pass the optimizer for the model and the metric(s)
+# 'mae': Mean Absolute Error
+dqn.compile(Adam(learning_rate=.00025), metrics=['mae'])
+
+### --- 6. Training & Storing
+
+# The DQN agent needs to play and train for a long period of time alone.
+# Since we are going to leave it train for a long time,
+# it makes sense to store some model checkpoints;
+# that is achieved with a callback.
+
+# Store it as HDF5: 2 files are stored (h5f.data* and h5f.index), but we refer to the .h5f ending only
+weights_filename = 'dqn_' + env_name + '_weights.h5f'
+checkpoint_weights_filename = 'dqn_' + env_name + '_weights_{step}.h5f'
+# Every interval steps, model weights saved
+checkpoint_callback = ModelIntervalCheckpoint(checkpoint_weights_filename, interval=100000)
+
+# We can also load the weights of a pre-trained network and keep training with it;
+# however, in that case the epsilon value needs to be adjusted!
+weights_path = "C:/Users/Mikel/Dropbox/Learning/PythonLab/udemy_rl_ai/notebooks/08-Deep-Q-Learning-On-Images/weights/dqn_BreakoutDeterministic-v4_weights_900000.h5f"
+
+# Example: load pre-trained model from course at step 900,000; epsilon: 0.3 -> 0.1
+model.load_weights(weights_path)
+# Update policy with new epsilon
+policy = LinearAnnealedPolicy(EpsGreedyQPolicy(),
+                              attr='eps',
+                              value_max=0.3,
+                              value_min=.1,
+                              value_test=.05,
+                              nb_steps=100000)
+# DQN Agent
+dqn = DQNAgent(model=model,
+               nb_actions=nb_actions,
+               policy=policy,
+               memory=memory,
+               processor=processor,
+               nb_steps_warmup=50000,
+               gamma=.99,
+               target_model_update=10000)
+# Compile
+dqn.compile(Adam(learning_rate=.00025), metrics=['mae'])
+
+# Train
+# log_interval: output frequency
+# nb_steps: steps to train; watch out: if it is pretrained, then we need less
+dqn.fit(env, nb_steps=500000, callbacks=[checkpoint_callback], log_interval=10000, visualize=False)
+
+### --- 7. Test & Use
+
+# We can either use the trained model or load one provided in the course.
+weights_path = "C:/Users/Mikel/Dropbox/Learning/PythonLab/udemy_rl_ai/notebooks/08-Deep-Q-Learning-On-Images/weights/dqn_BreakoutDeterministic-v4_weights_1200000.h5f"
+
+# Load model
+model.load_weights(weights_path)
+# Update policy with alow epsilon
+policy = EpsGreedyQPolicy(0.1)
+# DQN Agent: note that no training parameters are introduced
+dqn = DQNAgent(model=model,
+               nb_actions=nb_actions,
+               policy=policy,
+               memory=memory,
+               processor=processor)
+# ... but we need to compile the model
+dqn.compile(Adam(learning_rate=.00025), metrics=['mae'])
+
+# It plays very nicely with the model provided in the course!
+dqn.test(env, nb_episodes=5, visualize=True)
+
+```
+
+## 7. Creating Custom OpenAI Gym Environments
 
