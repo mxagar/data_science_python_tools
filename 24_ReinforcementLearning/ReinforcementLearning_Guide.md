@@ -228,7 +228,8 @@ The documentation page of OpenAI does not have extensive information:
 
 The most important part is the one related to the environments; when we select one, we need to read the source to understand what they're about. They have also a link to the original paper where they were defined/suggested. The environments are classified as follows:
 - Classical control: usually, we start here; the typical Cart-Pole and Mountain-Car scenarios are here.
-- Atari: images of Atari games. We have 2 versions for some games: the one with RAM contains relevant information on some object positions, etc.; the other has only images and a CNN should be applied to understand the object poses.
+- Atari: images of Atari games. We have 2 versions for some games: the one with RAM contains relevant information on some object positions, etc.; the other has only images and a CNN should be applied to understand the object poses. Note that the Atari environments were removed from the Open AI gym github repo; they are now being maintained under the  Arcade-Learning-Environment repo: [Issue 2407](https://github.com/openai/gym/issues/2407). We can still install them with `pip install "gym[atari,accept-rom-license]"`, but the links to the source code at the Open AI environments website are broken.
+
 - Box2D: 2D physics engine.
 - MuJoCo: 3D physics engine, often the famous manequins that learn to walk.
 - Algorithms: algorithms that learn to sort sequences, etc.
@@ -1139,7 +1140,12 @@ However, for learning purposes, it is also done manually in the following notebo
 
 `04_1_DQN_Images_Processinng_Images.ipynb`
 
-### 6.3 DQN Agent implementation: `04_2_DQN_Images_Keras_RL2_Breakout.ipynb`
+### 6.3 DQN Agent implementation
 
+`04_1_DQN_Images_Processinng_Images.ipynb`
+
+`04_2_DQN_Images_Keras_RL2_Breakout.ipynb`
+
+`04_3_DQN_Images_Keras_RL2_Pong.ipynb`
 
 
