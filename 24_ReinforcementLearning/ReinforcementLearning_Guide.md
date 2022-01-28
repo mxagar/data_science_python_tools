@@ -1139,5 +1139,7 @@ However, for learning purposes, it is also done manually in the following notebo
 
 `04_1_DQN_Images_Processinng_Images.ipynb`
 
-### 6.3 DQN Agent implementation: `notebook`
+### 6.3 DQN Agent implementation: `04_2_DQN_Images_Keras_RL2_Breakout.ipynb`
+
+
 
