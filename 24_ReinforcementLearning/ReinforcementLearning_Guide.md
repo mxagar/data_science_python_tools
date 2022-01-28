@@ -44,6 +44,14 @@ In addition to the notebooks in here, this course reviews other introductory con
      - `03_2_DQN_KerasRL2_Cartpole.ipynb`
      - `03_3_DQN_KerasRL2_Acrobot.ipynb`
 6. Deep Q-Learning on Images
+   - 6.1 DQN Nature Paper: My notes (TBD)
+   - 6.2 Processing Images
+     - 6.2.1 Color & Scale
+     - 6.2.2 Motion
+   - 6.3 DQN Agent Implementation Examples
+     - `04_1_DQN_Images_Processinng_Images.ipynb`
+     - `04_2_DQN_Images_Keras_RL2_Breakout.ipynb`
+     - `04_3_DQN_Images_Keras_RL2_Pong.ipynb`
 7. Creating Custom OpenAI Gym Environments
 
 ## 1. Introduction and Setup
@@ -1140,12 +1148,12 @@ However, for learning purposes, it is also done manually in the following notebo
 
 `04_1_DQN_Images_Processinng_Images.ipynb`
 
-### 6.3 DQN Agent implementation
+### 6.3 DQN Agent Implementation Examples
 
-`04_1_DQN_Images_Processinng_Images.ipynb`
+Three notebooks are created: 
 
-`04_2_DQN_Images_Keras_RL2_Breakout.ipynb`
-
-`04_3_DQN_Images_Keras_RL2_Pong.ipynb`
+- `04_1_DQN_Images_Processinng_Images.ipynb`
+- `04_2_DQN_Images_Keras_RL2_Breakout.ipynb`
+- `04_3_DQN_Images_Keras_RL2_Pong.ipynb`
 
 
