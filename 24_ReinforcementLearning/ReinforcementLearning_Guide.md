@@ -1371,16 +1371,55 @@ dqn.test(env, nb_episodes=5, visualize=True)
 Our goal is to be able to perform DQN on any environment.
 To that end, in this section the following is done:
 
-1. Overview of the class structue required by OpenAI Gym
+1. Overview of the class & directory structue required by OpenAI Gym
 2. Create a simple snake game with `pygame` (independently from OpenAI Gym)
 3. Convert/Refactor our custom game to an OpenAI Gym environment
 4. Create an AI agent to learn on the custom environment
 
 Note that we could also create any other environment, not a game with `pygame`, following the same instructions.
 
-### 7.1 Overview of the Class Structure Required by OpenAI Gym
+### 7.1 Overview of the Class & Directory Structure Required by OpenAI Gym
 
-We need to have a python file defining the environment class skeleton as follows:
+We need to have the following directory structure:
+
+```
+my_env_name/
+    setup.py # for 'pip installing game/package'
+    my_env_name/
+        __init__.py # registration code for env name and where to find env file
+        envs/
+            __init__.py # simple import of class inside my_env.py
+            my_env.py
+```
+
+Example with `snake`:
+
+```
+snake/
+    setup.py
+    snake/
+        __init__.py
+        envs/
+            __init__.py
+            snake_env.py
+```
+
+Another example with Atari:
+
+```
+atari/
+    setup.py
+    atari/
+        __init__.py
+        envs/
+            __init__.py
+            breakout_env.py
+            pong_env.py
+```
+
+In the following, the python file structures are summarized:
+
+`my_env_name/my_env_name/envs/my_env.py`
 
 ```python
 import numpy as np
@@ -1423,20 +1462,59 @@ class CustomEnv(gym.Env):
 
 ```
 
-This python file is located on a folder together with a `setup.py` and an `__init__.py`, explained later, and it needs to be installed so that OpenAI Gym knows about it:
+This python file is located on a folder together with a `setup.py`, which allows to install it:
 
 ```bash
-pip install -e my_gym_file.py
+pip install -e my_env_name
+```
+
+Setup file, which allows for `pip install`:
+
+`my_env_name/setup.py`
+
+```python
+from setuptools import setup
+
+setup(name='game_name', # gymsnake -> what pip is going to install; then, we import this
+      version='0.0.1',
+      install_requires=['gym','numpy'] # Any required deendendies
+)
+```
+
+The `__init__.py` files tell python we can `import` the folders they are located in; they sometimes are empty, but in this case we need to fill in them properly.
+
+`my_env_name/my_env_name/__init__.py`: 
+Registration code for env name and where to find env file:
+
+```python
+from gym.envs.registration import register
+
+register(
+    id='my_env_name-v0', # snake-v0
+    entry_point='my_env_name.envs:CustomEnv', # snake.envs:SnakeEnv
+)
+
+```
+
+`my_env_name/my_env_name/envs/__init__.py`: 
+Simple import of class inside `my_env.py`:
+
+```python
+from my_env_name.envs.my_env import CustomEnv
+#from snake.envs.snake_env import SnakeEnv
 ```
 
 ### 7.2 Creating a simple snake game with `pygame` (independently from OpenAI Gym)
 
-We are goin to build a game in which we have a snake that can move and eat food:
+We are going to build a game in which we have a snake that can move and eat food:
+
 - The food appears on screen
 - The goal is to eat as much food as possible
 - When food is eaten, the snake grows
-- We can go up/down & left/right, but never against the snake
-- If we hit a wall the game is over
+- We can move up/down & left/right, but never against the snake
+- If we hit a wall (window) the game is over
+- If the snake touches itself, the game is over
 - If the snake grows enough, the game is over
 
+![Snake game](./pics/snake_game.png)
 
