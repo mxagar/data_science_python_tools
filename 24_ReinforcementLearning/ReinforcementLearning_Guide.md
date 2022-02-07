@@ -53,6 +53,7 @@ In addition to the notebooks in here, this course reviews other introductory con
      - `04_2_DQN_Images_Keras_RL2_Breakout.ipynb`
      - `04_3_DQN_Images_Keras_RL2_Pong.ipynb`
 7. Creating Custom OpenAI Gym Environments
+   - 7.1 Overview of the Class Structure Required by OpenAI Gym
 
 ## 1. Introduction and Setup
 
@@ -1366,4 +1367,76 @@ dqn.test(env, nb_episodes=5, visualize=True)
 ```
 
 ## 7. Creating Custom OpenAI Gym Environments
+
+Our goal is to be able to perform DQN on any environment.
+To that end, in this section the following is done:
+
+1. Overview of the class structue required by OpenAI Gym
+2. Create a simple snake game with `pygame` (independently from OpenAI Gym)
+3. Convert/Refactor our custom game to an OpenAI Gym environment
+4. Create an AI agent to learn on the custom environment
+
+Note that we could also create any other environment, not a game with `pygame`, following the same instructions.
+
+### 7.1 Overview of the Class Structure Required by OpenAI Gym
+
+We need to have a python file defining the environment class skeleton as follows:
+
+```python
+import numpy as np
+import gym
+from gym import spaces
+
+# We inherit our CustomENv from gym.Env
+class CustomEnv(gym.Env):
+    
+    # There are more options, but the absolutely essential one is the human render mode
+    metadata = {'render.modes': ['human']}
+
+    def __init__(self):
+        
+        # Action space must be inherited from spaces
+        # We have Discrete and Continuous actions
+        self.action_space = spaces.Discrete(N_DISCRETE_ACTIONS)
+        # The observation space is not obligatory, because we could get it from outside the gym
+        # for instance observing the images we generate in our gym
+        # The same holds for tabular data
+        # Here, an image is provided
+        self.observation_space = spaces.Box(low=0,
+                                            high=255,
+                                            shape=(HEIGHT,WIDTH,N_CHANNELS),
+                                            dtype=np.uint8)
+
+    def step(self, action):
+        ...
+        return observation, reward, done, info
+
+    def reset(self):
+        ...
+        return observation # do not include: reward, done, info
+
+    def render(self, mode='human'):
+        ...
+
+    def close(self):
+        pass
+
+```
+
+This python file is located on a folder together with a `setup.py` and an `__init__.py`, explained later, and it needs to be installed so that OpenAI Gym knows about it:
+
+```bash
+pip install -e my_gym_file.py
+```
+
+### 7.2 Creating a simple snake game with `pygame` (independently from OpenAI Gym)
+
+We are goin to build a game in which we have a snake that can move and eat food:
+- The food appears on screen
+- The goal is to eat as much food as possible
+- When food is eaten, the snake grows
+- We can go up/down & left/right, but never against the snake
+- If we hit a wall the game is over
+- If the snake grows enough, the game is over
+
 
