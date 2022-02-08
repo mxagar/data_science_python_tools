@@ -54,6 +54,12 @@ In addition to the notebooks in here, this course reviews other introductory con
      - `04_3_DQN_Images_Keras_RL2_Pong.ipynb`
 7. Creating Custom OpenAI Gym Environments
    - 7.1 Overview of the Class Structure Required by OpenAI Gym
+   - 7.2 Creating a simple snake game with `pygame` (independently from OpenAI Gym): `05_1_DQN_CustomEnvironments_Snake_Pygame.ipynb`
+   - 7.3. Converting/Refactoring our custom game to an OpenAI Gym environment
+     - Installing the Environment
+     - Checking our installed environment: `05_2_DQN_CustomEnvironments_Snake_Gym_Env.ipynb`
+   - 7.4. Creating an AI agent to learn on the custom environment: `05_3_DQN_CustomEnvironments_Snake_Training_Agent.ipynb`
+
 
 ## 1. Introduction and Setup
 
@@ -1378,6 +1384,10 @@ To that end, in this section the following is done:
 
 Note that we could also create any other environment, not a game with `pygame`, following the same instructions.
 
+Most of the implemented code is not show in this section, the reader must look at the notebookas and the files.
+
+Finally, bear in mind that I had issues with the pygame online visualization, since the display window froze every time I wanted to watch the game. I think it is a Windows problem; the rewards and matplotlib visualizations seem to work.
+
 ### 7.1 Overview of the Class & Directory Structure Required by OpenAI Gym
 
 We need to have the following directory structure:
@@ -1465,6 +1475,7 @@ class CustomEnv(gym.Env):
 That python file `my_env.py` is located on a folder together with a `setup.py`, which allows to install it:
 
 ```bash
+# pip install folder_name
 pip install -e my_env_name
 ```
 
@@ -1518,11 +1529,22 @@ We are going to build a game in which we have a snake that can move and eat food
 
 ![Snake game](./pics/snake_game.png)
 
+The notebook that implements the snake game definition using [Pygame](https://www.pygame.org/news):
+
+`05_1_DQN_CustomEnvironments_Snake_Pygame.ipynb`
+
+Note that the game is defined in two blocks:
+
+1. Game Class block
+2. Game Logic block
+
+This is a game definition without any OpenAI Gym interfaces. Then, this definition is refactored to the files in `snake/`. The refactoring consists in taking the Game Class block and adding OpenAI Gym interfaces. The Game Logic block is added in helper functions.
+
 ### 7.3. Converting/Refactoring our custom game to an OpenAI Gym environment
 
-Our game class is refactored to OpenAI Gym. We don't need the complete game logic code, since it will be summarized to a couple of lines in `step()`.
+Our game class is refactored to OpenAI Gym. Basically, we copy the game class and we modify it to match the OpenAI Gym standards/required methods. We don't need to take the complete game logic code 1:1, but it will be added to in several methods, mainly in `step()` and helper methods called by it.
 
-Recall structure:
+Recall we need to create the following structure:
 
 ```
 snake/
@@ -1534,7 +1556,7 @@ snake/
             snake_env.py
 ```
 
-We copy the ``SnakeEnv` class we created to `snake_env.py` and start refactoring.
+After filling in the `setup.py` and `__init__.py` files commented above, we copy the ``SnakeEnv` class we created to `snake_env.py` and start refactoring.
 
 Summary of changes:
 - Additional imports
@@ -1562,3 +1584,55 @@ The final refactored snake environment has approximately 300 lines and it can be
 
 `snake/snake/envs/snake_env.py`
 
+#### Installing the Environment
+
+After our custom environment has been refactored in the folder structure `snake/...` to meet the OpenAI Gym environment definition interfaces, we need to install it.
+
+Open Anaconda Terminal:
+
+```bash
+# Activate the Anaconda environment with all our libs
+conda activate ds
+# Go to folder where our game is
+cd ~/git_repositories/data_science_python_tools/24_ReinforcementLearning/05_DQN_CustomEnvironments
+ls # we should see snake/
+# pip install -e folder_name
+pip install -e snake # ... Successfully installed gymsnake-0.0.1
+```
+
+#### Checking our installed environment
+
+We now open Jupyter Lab/Notebook and test that everything worked.
+
+`05_2_DQN_CustomEnvironments_Snake_Gym_Env.ipynb`:
+
+```python
+
+import time
+import matplotlib.pyplot as plt
+import gym
+
+# We make/create an OpenAI GYm environment with our game
+env = gym.make("snake:snake-v0")
+
+env.reset();
+
+# We display wit matplotlib the effect of an action in the game img = observation
+env.render("human")
+action = env.action_space.sample() # [0, 1, 2, 3] = [UP, DOWN, LEFT, RIGHT]
+#img, reward, done, info = env.step(action)
+img, reward, done, info = env.step(0) # try hard coded actions
+print(reward, done, info)
+plt.figure()
+plt.imshow(img)
+```
+
+### 7.4. Creating an AI agent to learn on the custom environment
+
+The final notebook trains a DQN agent using Keras-RL2 to play our custom game Snake:
+
+`05_3_DQN_CustomEnvironments_Snake_Training_Agent.ipynb`
+
+Prior to executing this notebook, the previous two and the game folder structure `snake/` must have been correctly created.
+
+This nobetook is basically a modification of the notebook `04_2_DQN_Images_Keras_RL2_Breakout.ipynb`; the main modification is that we create an instance of our game environment Snake, instead of Breakout.
