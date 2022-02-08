@@ -1462,7 +1462,7 @@ class CustomEnv(gym.Env):
 
 ```
 
-This python file is located on a folder together with a `setup.py`, which allows to install it:
+That python file `my_env.py` is located on a folder together with a `setup.py`, which allows to install it:
 
 ```bash
 pip install -e my_env_name
@@ -1475,7 +1475,7 @@ Setup file, which allows for `pip install`:
 ```python
 from setuptools import setup
 
-setup(name='game_name', # gymsnake -> what pip is going to install; then, we import this
+setup(name='game_name', # gymsnake -> what pip is going to install to import
       version='0.0.1',
       install_requires=['gym','numpy'] # Any required deendendies
 )
@@ -1518,3 +1518,33 @@ We are going to build a game in which we have a snake that can move and eat food
 
 ![Snake game](./pics/snake_game.png)
 
+### 7.3. Converting/Refactoring our custom game to an OpenAI Gym environment
+
+Our game class is refactored to OpenAI Gym. We don't need the complete game logic code, since it will be summarized to a couple of lines in `step()`.
+
+Recall structure:
+
+```
+snake/
+    setup.py
+    snake/
+        __init__.py
+        envs/
+            __init__.py
+            snake_env.py
+```
+
+We copy the ``SnakeEnv` class we created to `snake_env.py` and start refactoring.
+
+Summary of changes:
+- Additional imports
+- `metadata`
+- `class SnakeEnv(gym.Env)`
+  - Disable window size as parameter
+  - Action space, step limit, sleep
+
+`snake_env.py`
+
+```python
+
+```
