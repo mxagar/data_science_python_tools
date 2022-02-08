@@ -1540,11 +1540,25 @@ Summary of changes:
 - Additional imports
 - `metadata`
 - `class SnakeEnv(gym.Env)`
-  - Disable window size as parameter
-  - Action space, step limit, sleep
+- Disable window size as parameter
+- Action space, step limit, sleep
+- `reset()`: return image with axes changed
+- Modify action values (strings -> integers)
+- Static methods = methods that don't change the class: remove `self` and add `@staticmethod` decorator
+  - Static methods: `change_direction()`, `move()`
+- `human_step()`: it is re-written to a completely new `step()`; it contains the logic!
+- Remove some methods not needed anymore:
+  - `display_score()`
+  - `end_game()`
+- Add/Write new methods required by `step()`; they use in part similar code pieces as the game logic block from the original game definition:
+  - `food_handler()`
+  - `update_game_state()`
+  - `get_image_array_from_game()`
+  - `render()`
+  - `close()`
+- Rewrite `game_over()`
 
-`snake_env.py`
+The final refactored snake environment has approximately 300 lines and it can be found in 
 
-```python
+`snake/snake/envs/snake_env.py`
 
-```
