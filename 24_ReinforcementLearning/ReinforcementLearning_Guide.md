@@ -15,29 +15,91 @@ In addition to the notebooks in here, this course reviews other introductory con
 **Overview**:
 1. Introduction and Setup
 2. Reinforcement Learning Concepts
+   - 2.1 Markov Decision Process in a Gridworld and the Bellman Equation
+   - 2.2 Deterministic vs. Stochastic Policies
+   - 2.3 Neural Netowks for Value & Policy Prediction
 3. OpenAI Gym Overview
+   - 3.1 OpenAI Gym Documentation
+   - 3.2 Gym Environments: Overview - `01_OpenAI_Gym_Overview.ipynb`
+     - 3.2.1 Atari Breakout Game
+     - 3.2.2 Mountain Car
 4. (Classical) Q-Learning
-5. Deep Q-Learning
+   - 4.1 Intuition
+   - 4.2 Q Function
+   - 4.3 Computing the Q Function and the Q-Learning Table
+   - 4.4 Continuous Environments
+   - 4.5 Implementation Notebooks
+     - `02_1_QLearning_Discrete_FrozenLake.ipynb`
+     - `02_2_QLearning_Continuous_Cartpole.ipynb`
+     - `02_3_QLearning_Continuous_MountainCar.ipynb`
+   - 4.6 Final Remarks
+5. Deep Q-Learning (DQN)
+   - 5.1 History of DQN
+   - 5.2 Review of RL Concepts
+   - 5.3 Core Idea of DQN: Overcome the shortcoming of Q-Learning
+   - 5.4 Experience Replay / Replay Buffer
+   - 5.5 Q Network & Target Network
+   - 5.6 Implementation Examples
+     - `03_1_DQN_Manual_Cartpole.ipynb`
+     - `03_2_DQN_KerasRL2_Cartpole.ipynb`
+     - `03_3_DQN_KerasRL2_Acrobot.ipynb`
 6. Deep Q-Learning on Images
+   - 6.1 DQN Nature Paper: My notes (TBD)
+   - 6.2 Processing Images
+     - 6.2.1 Color & Scale
+     - 6.2.2 Motion
+   - 6.3 DQN Agent Implementation Examples
+     - `04_1_DQN_Images_Processinng_Images.ipynb`
+     - `04_2_DQN_Images_Keras_RL2_Breakout.ipynb`
+     - `04_3_DQN_Images_Keras_RL2_Pong.ipynb`
 7. Creating Custom OpenAI Gym Environments
+   - 7.1 Overview of the Class Structure Required by OpenAI Gym
+   - 7.2 Creating a simple snake game with `pygame` (independently from OpenAI Gym): `05_1_DQN_CustomEnvironments_Snake_Pygame.ipynb`
+   - 7.3. Converting/Refactoring our custom game to an OpenAI Gym environment
+     - Installing the Environment
+     - Checking our installed environment: `05_2_DQN_CustomEnvironments_Snake_Gym_Env.ipynb`
+   - 7.4. Creating an AI agent to learn on the custom environment: `05_3_DQN_CustomEnvironments_Snake_Training_Agent.ipynb`
+
 
 ## 1. Introduction and Setup
 
+Apple M1:
+
 ```bash
 conda env list
+# conda create -n tf tensorflow
+# Watch out: currently (2022-01-24) only TF 2.0 supported on Apple M1?
 conda activate tf
-pip install jupyter numpy matplotlib 
+conda install jupyter jupyterlab numpy pandas scikit-learn matplotlib seaborn pip -y
 # Install OpenAI Gym base library
 pip install gym
 # By default, only the classic control family is installed
 # We need to install specific environment families manually
 # Note that I had issues installing Box2D and MuJoCo
-pip install 'gym[atari,accept-rom-license]'
+pip install "gym[atari,accept-rom-license]"
 pip install pygame
+pip install pyglet
 # We can also do in a Jupyter notebook: `!pip install gym`
-# And we can also install stuff using Anaconda
-conda install lxml pandas pillow scikit-learn seaborn tensorflow
+# Watch out: no keras-rl2 support for TF < 2.1
+# PIL / Pillow
+pip install pillow
 ```
+
+Windows PC:
+```bash
+conda env list
+# conda create -n tf tensorflow
+conda activate tf
+conda install jupyter jupyterlab numpy pandas scikit-learn matplotlib seaborn pip -y
+pip install tensorflow==2.6.2
+pip3 install gym
+pip install "gym[atari,accept-rom-license]"
+pip install pygame
+pip install pyglet
+pip install keras-rl2
+    # Watch out: repository is archived
+```
+
 
 Introductory sections, not covered here:
 - Numpy: `~/Dropbox/Learning/PythonLab/python_manual.txt`
@@ -71,7 +133,7 @@ Important elements:
 
 Typical example: Cart pole (in Spanish, *péndulo invertido*): The goal is to maintain the cart pole upright by moving the cart left/right; we get an observation of the pole's angle after our moving action and a reward is accordingly assigned depending on its angle.
 
-### Markov Decision Process in a Gridworld and the Bellman Equation
+### 2.1 Markov Decision Process in a Gridworld and the Bellman Equation
 
 I wrote this section after reading Wikipedia articles and watching the following video:
 
@@ -116,7 +178,7 @@ That is so because the state space might be very large to sweep and propagate al
 
 The discount factor models tha fact that a state value in future steps will loose its value (because we are less sure); in our case, it can be considered $\gamma = 1$ for simplicity.
 
-### Deterministic vs. Stochastic Policies
+### 2.2 Deterministic vs. Stochastic Policies
 
 A **deterministic policy** maps a state to an action.
 
@@ -130,7 +192,7 @@ That is also known as **exploitation** (one deterministic action) vs **explorati
 
 ![Deterministic vs. stochastic policies (by Luis Serrano)](pics/stochastic_vs_deterministic.png)
 
-### Neural Netowks for Value & Policy Prediction
+### 2.3 Neural Netowks for Value & Policy Prediction
 
 Since computing the **state values** $V(s)$ and the **action policies** (i.e., which actions to take in each state) might be very expensive for large worlds, one can train neural networks that predict them given past history; that is the key idea behind Deep Reinforcement Learning.
 
@@ -173,7 +235,7 @@ June 2019: GPT-2 is announced, but no code/model provided - the reason according
 
 2021: DALL-E paper is published by OpenAI: very nice Text-to image model. The model is not public.
 
-### OpenAI Gym Documentation
+### 3.1 OpenAI Gym Documentation
 
 The documentation page of OpenAI does not have extensive information:
 
@@ -181,14 +243,15 @@ The documentation page of OpenAI does not have extensive information:
 
 The most important part is the one related to the environments; when we select one, we need to read the source to understand what they're about. They have also a link to the original paper where they were defined/suggested. The environments are classified as follows:
 - Classical control: usually, we start here; the typical Cart-Pole and Mountain-Car scenarios are here.
-- Atari: images of Atari games. We have 2 versions for some games: the one with RAM contains relevant information on some object positions, etc.; the other has only images and a CNN should be applied to understand the object poses.
+- Atari: images of Atari games. We have 2 versions for some games: the one with RAM contains relevant information on some object positions, etc.; the other has only images and a CNN should be applied to understand the object poses. Note that the Atari environments were removed from the Open AI gym github repo; they are now being maintained under the  Arcade-Learning-Environment repo: [Issue 2407](https://github.com/openai/gym/issues/2407). We can still install them with `pip install "gym[atari,accept-rom-license]"`, but the links to the source code at the Open AI environments website are broken.
+
 - Box2D: 2D physics engine.
 - MuJoCo: 3D physics engine, often the famous manequins that learn to walk.
 - Algorithms: algorithms that learn to sort sequences, etc.
 - Robotics: the Dactyl is here.
 - Third party envs (link is broken at the moment).
 
-### Gym Environments: Overview - `01_OpenAI_Gym_Overview.ipynb`
+### 3.2 Gym Environments: Overview - `01_OpenAI_Gym_Overview.ipynb`
 
 See notebook
 
@@ -212,7 +275,7 @@ Typical methods we need to know:
     - `render("human")`: images rendered, for human beings
     - `render("rgb_array")`: numpy RGB array; for computers or visualizing with matplotlib
 
-#### 1. Atari Breakout Game
+#### 3.2.1 Atari Breakout Game
 
 Popular Atari game in which we m ove paddle so that we hit a ball that collides agains a rainbow ball; collisions remove rainbow blocks (goal). If we miss hitting the ball, it falls down (avoid).
 
@@ -308,7 +371,7 @@ for step in range(200):
 env.close()
 ```
 
-#### 2. Mountain Car
+#### 3.2.2 Mountain Car
 
 A very famous testbed published by Moore in 1990: "A car is on a one-dimensional track, positioned between two mountains. The goal is to drive up the mountain on the right; however, the car's engine is not strong enough to scale the mountain in a single pass. Therefore, the only way to succeed is to drive back and forth to build up momentum."
 
@@ -373,7 +436,7 @@ The roots of Q-Learning are in children development studies by Jean Piaget; late
 
 If we use neural networks during the prediction phase of Q-Learning, we are carrying out **Deep Q-Learning** or **Deep Reinforcement Learning**. That term was coined by DeepMind in the 2010's.
 
-### Intuition
+### 4.1 Intuition
 
 Recall the cycle in Reinforcement Learning: an agent performs an action in the environment according to a policy, which leads to a reward and observations of state change; then, a policy update occurs, which should lead to better future actions in the direction of the final goal.
 
@@ -393,7 +456,7 @@ Unfortunately, the Q-Learning algorithm/table is not able to solve all problems,
 - It converges for discrete spaces only, not continuous ones; however, it is possible to meaningfully discretize some spaces.
 - It grows in size too much for realistic scenarios. Let's consider chess: it has 8x8 cells but much more states, since each piece location configuration is actually a state. Additionally, for each state, all possible actions need to be listed: any piece movement. Note that even the definition of all possible states and actions in chess is mathematically not solved.
 
-### Q Function
+### 4.2 Q Function
 
 See also Sutton & Barto (Reinforcement Learning -- An Introduction), Section 6.5.
 
@@ -446,7 +509,7 @@ The error term is the difference between the target value and the current value,
 
 The target $Q$ value comprises the maximum Q value in the next state for any given action. That term is multiplied by a discount factor which appears in the deduction of the formula to model the idea that later rewards have less value.
 
-### Computing the Q Function and the Q-Learning Table
+### 4.3 Computing the Q Function and the Q-Learning Table
 
 We initialize the table with `0` or very small values.
 We let the game play by just taking random actions.
@@ -462,7 +525,7 @@ That choice occurs in the term $\max_a{Q(S_{t+1},a)}$: we can take the action wi
 That balance between exploration vs exploitation is controlled with the hyperparameter `epsilon`, which is defined to decay (exponentially) over time: epsilon dictates the probability of taking a random action or the best known one.
 This is known as the **greedy epsilon choice**.
 
-### Continuous Environments
+### 4.4 Continuous Environments
 
 In a discrete environment like `FrozenLake` we have one discrete observation which maps to a unique state variable. In a continuous environment we can have we have `n` continuous observation variables and they map to one state. Also, recall that the Q-Learning table is `state x action`.
 
@@ -470,7 +533,7 @@ To address that issue, we discretize each observation variable in bins and build
 
 - We build a multidimensional matrix/array: dimensions are `observations + action`. Each observation dimension is discretized/binned in all defined ranges and the action dimension contains all possible actions; then, each combination of `observations + action` has a Q value. Thus, 4 observation values lead to a dimension of 5 (`observations + action`). Each dimension has the size of the number of bins or the number of actions. Example: 4 observations, each one with 3 bins and additionally 2 actions: `np.zeros((3,3,3,3,2))`. Then, each cell maps to a possible Q value.
 - Note that combining observations and bins we get all the states. Thus, we can further develop the structure above to have `3^4` states and `2` actions. However, the multidimensional array is more comfortable. 
-### Implementation Notebooks
+### 4.5 Implementation Notebooks
 
 Altogether, three notebooks are available in `./02_QLearning`; in the following a brief explanation of them is provided:
 
@@ -697,7 +760,7 @@ env.close()
 
 ```
 
-### Final Remarks
+### 4.6 Final Remarks
 
 I skimmed through these posts
 - [Stackoverflow: Q-Learning](https://stackoverflow.com/questions/34181056/q-learning-vs-temporal-difference-vs-model-based-reinforcement-learning)
@@ -711,14 +774,14 @@ And these are the unchecked conclusions I came up with:
   - SARSA: Q update and action choice are done according to an epsilon-greeedy policy, i.e., if epsilon is not  `0` exploration is done.
   - Q-Learning: action choice is epsilon-greedy, but Q update is greedy: no exploration is done and the max is taken.
 
-## 5. Deep Q-Learning
+## 5. Deep Q-Learning (DQN)
 
 Some notes on the meaning of terms:
 - Deep Q-Learning = DQN.
 - Deep Reinforcement Learning is Reinforcement Learning when (Deep) Neural Networks are involved; it is a broader topic than DQN, since there are some other techniques other than Q-Learning in Reinforcement Learning.
 - Deep Q-Learning is more specific: it refers to the fact when Deep Learning is applied to Q-Learning.
 
-### History of DQN
+### 5.1 History of DQN
 
 - 1992: IBM develops a TD-Backgammon agent/algorithm (TD: Temporal Difference ~ Q-Learning); they trained an ANN and learned to play Backgammon. Unknown game strategies emerged that were not popular at the time.
 - 2010: DeepMind popularized RL: they started implementing DQNs to play Atari games; they also attached CNNs to RL agents to understand images.
@@ -729,7 +792,7 @@ Some notes on the meaning of terms:
   - `AlphaStar`: RL program that plays StarCraft II
   - `AlphaFold`: Protein structure prediction
 
-### Review of RL Concepts
+### 5.2 Review of RL Concepts
 
 Recall these concepts from previous sections.
 
@@ -741,7 +804,7 @@ Recall these concepts from previous sections.
 - The Bellman Equation.
 - Deterministic vs. stochastic policies.
 
-### Core Idea of DQN: Overcome the shortcoming of Q-Learning
+### 5.3 Core Idea of DQN: Overcome the shortcoming of Q-Learning
 
 ANNs are used to estimate:
 - State values
@@ -778,7 +841,7 @@ I understand the network interpolates values according to past state-value or st
 
 However, note that these network definitions are conceptual. In practice, we often use the **Q Network** and the **target network**, which have different inputs and ouputs, but which act as the value network and the policy network. Additionally, note that the Q network and the target network share their weights with a delay, as explained later.
 
-### Experience Replay / Replay Buffer
+### 5.4 Experience Replay / Replay Buffer
 
 In the cycle of a typical RL application, DQN is plugged into the process as a system that ultimately provides action choices.
 
@@ -813,7 +876,7 @@ We will define an experience as a tuple like this:
 - `R_t+1`: reward received after transitioning from `t` to `t+1`
 - `S_t+1`: new state at time `t+1`
 
-### Q Network & Target Network
+### 5.5 Q Network & Target Network
 
 **Note: This section is not consistent with the implementation in `03_1_DQN_Manual_Cartpole.ipynb`. There is a misunderstanding here or in the code. I think the main idea is correct, though. See the notebook.**
 
@@ -849,3 +912,727 @@ The **target network** is periodically updated; most of the time its weights are
 All in all, it is as if
 - the target network is the value network
 - the Q network is the policy network
+
+### 5.6 Implementation Examples
+
+Altogether, the code is implemented in three notebooks, but only one is summarized here, as explained in the following:
+
+1. `03_1_DQN_Manual_Cartpole.ipynb`: This notebook implements [CartPole](https://gym.openai.com/envs/CartPole-v1/) manually using Keras/TF 2. This notebook is interesting how to map the theoretical concepts in Section 5 to code. However, DQN agents are usually not implemented manually, rather using abstraction libraries, as in the next notebook. Additionally, either in the notebook or in the notes of this guide there are some errors, since both seem not to match. Therefore, directly use the next notebook.
+2. `03_2_DQN_KerasRL2_Cartpole.ipynb`: This notebook implements [CartPole](https://gym.openai.com/envs/CartPole-v1/) using a DQN agent based on Keras-RL2. It is th emost important notebook on DQN. A summary is provided below.
+3. `03_3_DQN_KerasRL2_Acrobot.ipynb`: This notebook implements [Acrobot](https://gym.openai.com/envs/Acrobot-v1/) using a DQN agent based on Keras-RL2; nothing new added here, only action and observation/state sizes are larger.
+
+
+`03_2_DQN_KerasRL2_Cartpole.ipynb`:
+
+Usually, DQN agents are not programmed manually, as in `03_1_DQN_Manual_Cartpole.ipynb`. Instead, abstraction libraries are used on top of OpenAI Gym and Keras. There are many libraries available, the one used in the course is [Keras RL2](https://github.com/taylormcnally/keras-rl2), which requires TF >= 2.1.
+
+Note that Keras RL2 is basically Keras RL for Tensorflow 2 and that it is archived, i.e., not further developed; however, it seems to be a nice trade-off between abstraction and manual definition, optimizing for learning and understanding. Keras RL2 separates nicely:
+- the model: we just define one and internally is managed the other
+- replay memory/buffer: deque or circular array
+- policy: e.g., epsilon-greedy with decaying value
+- DQN agent: it takes all of the above and the environment and it is trained
+
+See:
+
+- Documentation link: [https://keras-rl.readthedocs.io/en/latest/](https://keras-rl.readthedocs.io/en/latest)
+- The documentation is not very extensive, but the examples are very nice; the examples are available on Github: [https://github.com/taylormcnally/keras-rl2/tree/master/examples](https://github.com/taylormcnally/keras-rl2/tree/master/examples)
+
+Some alternatives to Keras-RL2 would be:
+- OpenAI Baselines
+- TensorFlow Agents
+
+Overview of contents in the notebook:
+1. Imports and Setup
+2. Creating the ANN
+3. DQN Agent: Training
+4. Test & Use
+
+```python
+
+## -- 1. Imports and Setup
+
+import time  # to reduce the game speed when playing manually
+import numpy as np
+import gym
+from pyglet.window import key  # for manual playing
+
+# Import TF stuff first, because Keras-RL2 is built on TF
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Activation
+from tensorflow.keras.layers import Flatten
+from tensorflow.keras.optimizers import Adam
+
+# Now the import the Keras-rl2 agent
+# See
+# https://keras-rl.readthedocs.io/en/latest/agents/overview/#available-agents
+# It is called rl, but it belongs to Keras-RL2
+from rl.agents.dqn import DQNAgent  # Use the basic Deep-Q-Network agent
+
+env_name = "CartPole-v0"
+env = gym.make(env_name)
+
+# Manual play
+env.reset()
+for _ in range(300):
+    env.render(mode="human") # render on screen
+    random_action = env.action_space.sample() # random action
+    env.step(random_action)
+env.close() # close
+
+## -- 2. Creating the ANN
+
+# Get number of actions
+n_actions = env.action_space.n
+# Get number of observations
+# Note it is a tuple of dim 1
+# We need Flatten to address that:
+# Flatten() takes (None, a, b, c), where None is the batch,
+# and it converts it to (None, a*b*c)
+# https://keras.io/api/layers/reshaping_layers/flatten/
+n_observations = env.observation_space.shape
+
+# We build the same model as in the previous notebook
+# but now, we also use Flatten
+model = Sequential()
+# Flatten() takes (None, a, b, c), where None is the batch,
+# and it converts it to (None, a*b*c)
+# https://keras.io/api/layers/reshaping_layers/flatten/
+model.add(Flatten(input_shape=(1,) + n_observations))
+model.add(Dense(16))
+model.add(Activation('relu'))
+model.add(Dense(32))
+model.add(Activation('relu'))
+model.add(Dense(n_actions))
+model.add(Activation('relu'))
+
+model.summary()
+
+## -- 3. DQN Agent: Training
+
+# Replay Buffer = Sequential Memory
+from rl.memory import SequentialMemory
+
+# limit: the size of the deque
+# window_length: it starts making sense with images; use 1 for non-visual data
+memory = SequentialMemory(limit=20000, window_length=1)
+
+# Policy
+# LinearAnnealedPolicy: linear decay
+# EpsGreedyQPolicy: with a linearly decaying epsilon, choose exploitation/exploration according to it
+from rl.policy import LinearAnnealedPolicy,EpsGreedyQPolicy
+
+# Policy of action choice
+# We use the epsilon-greedy policy, as always
+# Random (exploration) or best (exploitation) action chosen
+# depending on epsilon in [value_min, value_max], decreased by steps.
+# value_test: evaluation can be performed at a fixed epsilon (should be small: exploitation)
+# nb_steps: we match our sequential memory size
+policy = LinearAnnealedPolicy(EpsGreedyQPolicy(),
+                             attr='eps',
+                             value_max=1.0,
+                             value_min=0.1,
+                             value_test=0.05,
+                             nb_steps=20000)
+
+# DQN Agent
+# We now pass all elements we have to the agent;
+# beforehand, we coded all that manually, not anymore.
+# nb_steps_warmup: our burn_in = how many steps before epsilon starts decreasing
+# target_model_update: every how many epochs do we update the weights of the frozen model
+# Optional: batch_size, gamma
+dqn = DQNAgent(model=model,
+              nb_actions=n_actions,
+              memory=memory,
+              nb_steps_warmup=10,
+              target_model_update=100,
+              policy=policy)
+
+# Compile the Agent
+# We need to pass the optimizer for the model and the metric(s)
+# 'mae': Mean Absolute Error
+dqn.compile(Adam(learning_rate=1e-3),metrics=['mae'])
+
+# Train
+# Note that it takes much much less than in the manual case, because it's optimized!
+# nb_steps: episodes
+dqn.fit(env,nb_steps=20000,visualize=False,verbose=1)
+
+# Save model weights in crompressed format: HDF5
+dqn.save_weights(f'dqn_{env_name}_krl2_weights.h5f',overwrite=True)
+
+# Load weights
+# Note that we need to create the model and the DQN agent before loading the weights!
+dqn.load_weights(f'dqn_{env_name}_krl2_weights.h5f')
+
+## -- 4. Test & Use
+
+# Test
+dqn.test(env,nb_episodes=5,visualize=True)
+env.close()
+
+# We need to reshape the observation this way
+observation = env.reset()
+observation.reshape((1,1,4))
+
+# Use the model to carry out actions without Keras-RL2, only with the model
+observation = env.reset()
+for counter in range(500):
+    env.render()
+    print()
+    #action = np.argmax(model.predict(observation.reshape([1,4])))
+    action = np.argmax(model.predict(observation.reshape((1,1,4))))
+    observation, reward, done, info = env.step(action)
+    if done:
+        #pass
+        #print('done')
+        break
+env.close()
+
+```
+
+## 6. Deep Q-Learning on Images
+
+In real world problems we often don't have clear observation definitions and observation-related streams of data. Instead, we rely on images and learn from them. That is the motivation of this section, in which a simplified version of the original DQN paper for the Atari Breakout game is implemented. However, note that until 2020 DQN agents have not achieved beyong human performance on all 57 Atari games.
+
+`./literature/`:
+
+```bibtex
+@article{DQNNaturePaper,
+  title={Human-level control through deep reinforcement learning},
+  author={Mnih, Volodymyr and Kavukcuoglu, Koray and Silver, David and Rusu, Andrei A and Veness, Joel and Bellemare, Marc G and Graves, Alex and Riedmiller, Martin and Fidjeland, Andreas K and Ostrovski, Georg and others},
+  journal={nature},
+  volume={518},
+  number={7540},
+  pages={529--533},
+  year={2015},
+  publisher={Nature Publishing Group}
+}
+
+@article{Original_DQN_Paper,
+  title={Playing atari with deep reinforcement learning},
+  author={Mnih, Volodymyr and Kavukcuoglu, Koray and Silver, David and Graves, Alex and Antonoglou, Ioannis and Wierstra, Daan and Riedmiller, Martin},
+  journal={arXiv preprint arXiv:1312.5602},
+  year={2013}
+}
+
+@inproceedings{Agent57_Paper,
+  title={Agent57: Outperforming the atari human benchmark},
+  author={Badia, Adri{\`a} Puigdom{\`e}nech and Piot, Bilal and Kapturowski, Steven and Sprechmann, Pablo and Vitvitskyi, Alex and Guo, Zhaohan Daniel and Blundell, Charles},
+  booktitle={International Conference on Machine Learning},
+  pages={507--517},
+  year={2020},
+  organization={PMLR}
+}
+```
+
+### 6.1 DQN Nature Paper: My notes
+
+TBD.
+### 6.2 Processing Images
+
+#### 6.2.1 Color & Scale
+
+Eventhough an image has 3 channels and Google/Deepmind used them all, we are going to use grayscale images for simplification; those simplifications are done considering the human limits: if a human is able to play with the simplification, then we apply it. Additionally, we are going to scale the images to be `80x80` pixels.
+
+![Breakout: simplification of images for the DQN](./pics/breakout_simplification_dqn.png)
+
+These simplifications need to be applied every time the model is used, also during final usage.
+
+#### 6.2.2 Motion
+
+In order to understand the motion and game dynamics, we need to pass a complete set of images that occur during a window of time to the model (or, previously, to the replay buffer). A single frame is not sufficient, because the speed and motion direction cannot be obtained from them.
+
+Thus, we implement the following:
+- a sequence of images is appended to the deque/buffer every time, which constitute a time window of observations
+- when the buffer is sampled, these windows are sampled
+- a complete window of image is passed to the model
+
+The window length (number of frames) is a hyperparameter; the larger, the more data, the more memory and time required. Its size depends on the maximum delay we have from an action and its latest effects we would like to learn.
+
+All that image processing can be done in a one-liner.
+However, for learning purposes, it is also done manually in the following notebook (not explained here):
+
+`04_1_DQN_Images_Processinng_Images.ipynb`
+
+### 6.3 DQN Agent Implementation Examples
+
+Three notebooks are created, but the second is really the most important:
+
+- `04_1_DQN_Images_Processinng_Images.ipynb`: The [Breakout](https://gym.openai.com/envs/Breakout-v0/) game is tried with a manually built replay buffer (using `deque`). Next notebook implements the same game using the abstraction library Keras-RL2.
+- `04_2_DQN_Images_Keras_RL2_Breakout.ipynb`: The agent learns to play the [Breakout](https://gym.openai.com/envs/Breakout-v0/) game with Keras-RL2. **This notebook contains basically the template to build a DQN agent that works with images**. Th ereplay buffer is built with Keras-RL2 an an image pre-procesing class is defined, also using Keras-RL2.
+- `04_3_DQN_Images_Keras_RL2_Pong.ipynb`: In this notebook a DQN agent learns to play the [Pong](https://gym.openai.com/envs/Pong-v0/) game. This notebook is basically the previous one with small modifications.
+
+
+In the following, the summary of the second notebook is provided:
+
+`04_2_DQN_Images_Keras_RL2_Breakout.ipynb`
+
+Note that we have 2 versions for the Atari games: the one with RAM contains relevant information on some object positions, etc.; the other has only images and a CNN should be applied to understand the object poses.
+
+Also, note that the Atari environments were removed from the Open AI gym github repo; they are now being maintained under the  Arcade-Learning-Environment repo: [Issue 2407](https://github.com/openai/gym/issues/2407). We can still install them with `pip install "gym[atari,accept-rom-license]"`, but the links to the source code at the Open AI environments website are broken.
+
+Further important links:
+
+- Atari environements were removed from OpenAI Gym and moved to the Arcade-Learning-Environment repo: [https://github.com/openai/gym/issues/2407](https://github.com/openai/gym/issues/2407)
+- Difference between v0, v4 & Deterministic: 
+[https://github.com/openai/gym/issues/1280](https://github.com/openai/gym/issues/1280)
+- Atari enviornment: [https://github.com/mgbellemare/Arcade-Learning-Environment/blob/master/src/gym/envs/atari/environment.py](https://github.com/mgbellemare/Arcade-Learning-Environment/blob/master/src/gym/envs/atari/environment.py)
+
+We choose the environment `BreakoutDeterministic-v4` following the comments from the link above: [Issue 1280](https://github.com/openai/gym/issues/1280)
+
+```python
+
+### --- 1. Imports
+
+# Image processing
+from PIL import Image
+import numpy as np
+import gym
+import random
+#from gym.utils import play
+
+# CNN
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Activation, Flatten, Convolution2D, Permute
+from tensorflow.keras.optimizers import Adam
+
+# Keras-RL2
+from rl.agents.dqn import DQNAgent
+from rl.policy import LinearAnnealedPolicy, EpsGreedyQPolicy
+from rl.memory import SequentialMemory
+from rl.core import Processor
+from rl.callbacks import FileLogger, ModelIntervalCheckpoint # for tracking results
+
+### --- 2. Environment Setup
+
+env_name = "BreakoutDeterministic-v4"
+env = gym.make(env_name)
+nb_actions = env.action_space.n
+
+env.unwrapped.get_action_meanings()
+
+### --- 3. Image Processing
+
+IMG_SHAPE = (84, 84)
+WINDOW_LENGTH = 4
+
+class ImageProcessor(Processor):
+    def process_observation(self, observation):
+        # numpy -> PIL
+        img = Image.fromarray(observation)
+        # scale / resize
+        img = img.resize(IMG_SHAPE)
+        # grayscale (luminiscence)
+        img = img.convert("L")
+        # PIL -> numpy
+        img = np.array(img)
+        # save storage (optional)
+        return img.astype('uint8')
+    def process_state_batch(self, batch):
+        # scale grayvalues to [0,1]
+        processed_batch = batch.astype('float32') / 255.0
+        return processed_batch
+    def process_reward(self, reward):
+        # clip reward to [-1,1]
+        return np.clip(reward, -1.0, 1.0)
+
+### --- 4. Network Model
+
+# We pass images in sequences of 4 frames!
+input_shape = (WINDOW_LENGTH, IMG_SHAPE[0], IMG_SHAPE[1])
+input_shape
+
+# Take into account that we have (4,84,84) arrays,
+# but if we look at the documentation of Convolution2D,
+# our convolutional network expects (BatchSize, 84, 84, 4).
+# Thus, we need to account for this: we use the Permute layer for that.
+
+model = Sequential()
+# Change dimension places: (4,84,84) --> (84,84,4)
+model.add(Permute((2, 3, 1), input_shape=input_shape))
+# 32 filters, 8x8 kernel size
+# Default kernel initialization is Glorot, but some publications report better results with He
+model.add(Convolution2D(32, (8, 8), strides=(4, 4),kernel_initializer='he_normal'))
+model.add(Activation('relu'))
+model.add(Convolution2D(64, (4, 4), strides=(2, 2), kernel_initializer='he_normal'))
+model.add(Activation('relu'))
+model.add(Convolution2D(64, (3, 3), strides=(1, 1), kernel_initializer='he_normal'))
+model.add(Activation('relu'))
+model.add(Flatten())
+model.add(Dense(512))
+model.add(Activation('relu'))
+model.add(Dense(nb_actions))
+model.add(Activation('linear'))
+print(model.summary())
+
+### --- 5. Agent
+
+# Replay buffer
+memory = SequentialMemory(limit=1000000, window_length=WINDOW_LENGTH)
+
+# Image processor
+processor = ImageProcessor()
+
+# Policy: Linear decay
+# Random (exploration) or best (exploitation) action chosen
+# depending on epsilon in [value_min, value_max], decreased by steps.
+# value_test: evaluation can be performed at a fixed epsilon (should be small: exploitation)
+# nb_steps: we match our sequential memory size
+policy = LinearAnnealedPolicy(EpsGreedyQPolicy(),
+                              attr='eps',
+                              value_max=1.0,
+                              value_min=0.1,
+                              value_test=.05,
+                              nb_steps=1000000)
+
+# DQN Agent
+# We now pass all elements we have to the agent;
+# nb_steps_warmup: our burn_in = how many steps before epsilon starts decreasing
+# target_model_update: every how many epochs do we update the weights of the frozen model
+# Optional: batch_size, gamma
+dqn = DQNAgent(model=model,
+               nb_actions=nb_actions,
+               policy=policy,
+               memory=memory,
+               processor=processor,
+               nb_steps_warmup=50000,
+               gamma=.99,
+               target_model_update=10000,
+               train_interval=4,
+               delta_clip=1)
+
+# We need to pass the optimizer for the model and the metric(s)
+# 'mae': Mean Absolute Error
+dqn.compile(Adam(learning_rate=.00025), metrics=['mae'])
+
+### --- 6. Training & Storing
+
+# The DQN agent needs to play and train for a long period of time alone.
+# Since we are going to leave it train for a long time,
+# it makes sense to store some model checkpoints;
+# that is achieved with a callback.
+
+# Store it as HDF5: 2 files are stored (h5f.data* and h5f.index), but we refer to the .h5f ending only
+weights_filename = 'dqn_' + env_name + '_weights.h5f'
+checkpoint_weights_filename = 'dqn_' + env_name + '_weights_{step}.h5f'
+# Every interval steps, model weights saved
+checkpoint_callback = ModelIntervalCheckpoint(checkpoint_weights_filename, interval=100000)
+
+# We can also load the weights of a pre-trained network and keep training with it;
+# however, in that case the epsilon value needs to be adjusted!
+weights_path = "C:/Users/Mikel/Dropbox/Learning/PythonLab/udemy_rl_ai/notebooks/08-Deep-Q-Learning-On-Images/weights/dqn_BreakoutDeterministic-v4_weights_900000.h5f"
+
+# Example: load pre-trained model from course at step 900,000; epsilon: 0.3 -> 0.1
+model.load_weights(weights_path)
+# Update policy with new epsilon
+policy = LinearAnnealedPolicy(EpsGreedyQPolicy(),
+                              attr='eps',
+                              value_max=0.3,
+                              value_min=.1,
+                              value_test=.05,
+                              nb_steps=100000)
+# DQN Agent
+dqn = DQNAgent(model=model,
+               nb_actions=nb_actions,
+               policy=policy,
+               memory=memory,
+               processor=processor,
+               nb_steps_warmup=50000,
+               gamma=.99,
+               target_model_update=10000)
+# Compile
+dqn.compile(Adam(learning_rate=.00025), metrics=['mae'])
+
+# Train
+# log_interval: output frequency
+# nb_steps: steps to train; watch out: if it is pretrained, then we need less
+dqn.fit(env, nb_steps=500000, callbacks=[checkpoint_callback], log_interval=10000, visualize=False)
+
+### --- 7. Test & Use
+
+# We can either use the trained model or load one provided in the course.
+weights_path = "C:/Users/Mikel/Dropbox/Learning/PythonLab/udemy_rl_ai/notebooks/08-Deep-Q-Learning-On-Images/weights/dqn_BreakoutDeterministic-v4_weights_1200000.h5f"
+
+# Load model
+model.load_weights(weights_path)
+# Update policy with alow epsilon
+policy = EpsGreedyQPolicy(0.1)
+# DQN Agent: note that no training parameters are introduced
+dqn = DQNAgent(model=model,
+               nb_actions=nb_actions,
+               policy=policy,
+               memory=memory,
+               processor=processor)
+# ... but we need to compile the model
+dqn.compile(Adam(learning_rate=.00025), metrics=['mae'])
+
+# It plays very nicely with the model provided in the course!
+dqn.test(env, nb_episodes=5, visualize=True)
+
+```
+
+## 7. Creating Custom OpenAI Gym Environments
+
+Our goal is to be able to perform DQN on any environment.
+To that end, in this section the following is done:
+
+1. Overview of the class & directory structue required by OpenAI Gym
+2. Create a simple snake game with `pygame` (independently from OpenAI Gym)
+3. Convert/Refactor our custom game to an OpenAI Gym environment
+4. Create an AI agent to learn on the custom environment
+
+Note that we could also create any other environment, not a game with `pygame`, following the same instructions.
+
+Most of the implemented code is not show in this section, the reader must look at the notebookas and the files.
+
+Finally, bear in mind that I had issues with the pygame online visualization, since the display window froze every time I wanted to watch the game. I think it is a Windows problem; the rewards and matplotlib visualizations seem to work.
+
+### 7.1 Overview of the Class & Directory Structure Required by OpenAI Gym
+
+We need to have the following directory structure:
+
+```
+my_env_name/
+    setup.py # for 'pip installing game/package'
+    my_env_name/
+        __init__.py # registration code for env name and where to find env file
+        envs/
+            __init__.py # simple import of class inside my_env.py
+            my_env.py
+```
+
+Example with `snake`:
+
+```
+snake/
+    setup.py
+    snake/
+        __init__.py
+        envs/
+            __init__.py
+            snake_env.py
+```
+
+Another example with Atari:
+
+```
+atari/
+    setup.py
+    atari/
+        __init__.py
+        envs/
+            __init__.py
+            breakout_env.py
+            pong_env.py
+```
+
+In the following, the python file structures are summarized:
+
+`my_env_name/my_env_name/envs/my_env.py`
+
+```python
+import numpy as np
+import gym
+from gym import spaces
+
+# We inherit our CustomENv from gym.Env
+class CustomEnv(gym.Env):
+    
+    # There are more options, but the absolutely essential one is the human render mode
+    metadata = {'render.modes': ['human']}
+
+    def __init__(self):
+        
+        # Action space must be inherited from spaces
+        # We have Discrete and Continuous actions
+        self.action_space = spaces.Discrete(N_DISCRETE_ACTIONS)
+        # The observation space is not obligatory, because we could get it from outside the gym
+        # for instance observing the images we generate in our gym
+        # The same holds for tabular data
+        # Here, an image is provided
+        self.observation_space = spaces.Box(low=0,
+                                            high=255,
+                                            shape=(HEIGHT,WIDTH,N_CHANNELS),
+                                            dtype=np.uint8)
+
+    def step(self, action):
+        ...
+        return observation, reward, done, info
+
+    def reset(self):
+        ...
+        return observation # do not include: reward, done, info
+
+    def render(self, mode='human'):
+        ...
+
+    def close(self):
+        pass
+
+```
+
+That python file `my_env.py` is located on a folder together with a `setup.py`, which allows to install it:
+
+```bash
+# pip install folder_name
+pip install -e my_env_name
+```
+
+Setup file, which allows for `pip install`:
+
+`my_env_name/setup.py`
+
+```python
+from setuptools import setup
+
+setup(name='game_name', # gymsnake -> what pip is going to install to import
+      version='0.0.1',
+      install_requires=['gym','numpy'] # Any required deendendies
+)
+```
+
+The `__init__.py` files tell python we can `import` the folders they are located in; they sometimes are empty, but in this case we need to fill in them properly.
+
+`my_env_name/my_env_name/__init__.py`: 
+Registration code for env name and where to find env file:
+
+```python
+from gym.envs.registration import register
+
+register(
+    id='my_env_name-v0', # snake-v0
+    entry_point='my_env_name.envs:CustomEnv', # snake.envs:SnakeEnv
+)
+
+```
+
+`my_env_name/my_env_name/envs/__init__.py`: 
+Simple import of class inside `my_env.py`:
+
+```python
+from my_env_name.envs.my_env import CustomEnv
+#from snake.envs.snake_env import SnakeEnv
+```
+
+### 7.2 Creating a simple snake game with `pygame` (independently from OpenAI Gym)
+
+We are going to build a game in which we have a snake that can move and eat food:
+
+- The food appears on screen
+- The goal is to eat as much food as possible
+- When food is eaten, the snake grows
+- We can move up/down & left/right, but never against the snake
+- If we hit a wall (window) the game is over
+- If the snake touches itself, the game is over
+- If the snake grows enough, the game is over
+
+![Snake game](./pics/snake_game.png)
+
+The notebook that implements the snake game definition using [Pygame](https://www.pygame.org/news):
+
+`05_1_DQN_CustomEnvironments_Snake_Pygame.ipynb`
+
+Note that the game is defined in two blocks:
+
+1. Game Class block
+2. Game Logic block
+
+This is a game definition without any OpenAI Gym interfaces. Then, this definition is refactored to the files in `snake/`. The refactoring consists in taking the Game Class block and adding OpenAI Gym interfaces. The Game Logic block is added in helper functions.
+
+### 7.3. Converting/Refactoring our custom game to an OpenAI Gym environment
+
+Our game class is refactored to OpenAI Gym. Basically, we copy the game class and we modify it to match the OpenAI Gym standards/required methods. We don't need to take the complete game logic code 1:1, but it will be added to in several methods, mainly in `step()` and helper methods called by it.
+
+Recall we need to create the following structure:
+
+```
+snake/
+    setup.py
+    snake/
+        __init__.py
+        envs/
+            __init__.py
+            snake_env.py
+```
+
+After filling in the `setup.py` and `__init__.py` files commented above, we copy the ``SnakeEnv` class we created to `snake_env.py` and start refactoring.
+
+Summary of changes:
+- Additional imports
+- `metadata`
+- `class SnakeEnv(gym.Env)`
+- Disable window size as parameter
+- Action space, step limit, sleep
+- `reset()`: return image with axes changed
+- Modify action values (strings -> integers)
+- Static methods = methods that don't change the class: remove `self` and add `@staticmethod` decorator
+  - Static methods: `change_direction()`, `move()`
+- `human_step()`: it is re-written to a completely new `step()`; it contains the logic!
+- Remove some methods not needed anymore:
+  - `display_score()`
+  - `end_game()`
+- Add/Write new methods required by `step()`; they use in part similar code pieces as the game logic block from the original game definition:
+  - `food_handler()`
+  - `update_game_state()`
+  - `get_image_array_from_game()`
+  - `render()`
+  - `close()`
+- Rewrite `game_over()`
+
+The final refactored snake environment has approximately 300 lines and it can be found in 
+
+`snake/snake/envs/snake_env.py`
+
+#### Installing the Environment
+
+After our custom environment has been refactored in the folder structure `snake/...` to meet the OpenAI Gym environment definition interfaces, we need to install it.
+
+Open Anaconda Terminal:
+
+```bash
+# Activate the Anaconda environment with all our libs
+conda activate ds
+# Go to folder where our game is
+cd ~/git_repositories/data_science_python_tools/24_ReinforcementLearning/05_DQN_CustomEnvironments
+ls # we should see snake/
+# pip install -e folder_name
+pip install -e snake # ... Successfully installed gymsnake-0.0.1
+```
+
+#### Checking our installed environment
+
+We now open Jupyter Lab/Notebook and test that everything worked.
+
+`05_2_DQN_CustomEnvironments_Snake_Gym_Env.ipynb`:
+
+```python
+
+import time
+import matplotlib.pyplot as plt
+import gym
+
+# We make/create an OpenAI GYm environment with our game
+env = gym.make("snake:snake-v0")
+
+env.reset();
+
+# We display wit matplotlib the effect of an action in the game img = observation
+env.render("human")
+action = env.action_space.sample() # [0, 1, 2, 3] = [UP, DOWN, LEFT, RIGHT]
+#img, reward, done, info = env.step(action)
+img, reward, done, info = env.step(0) # try hard coded actions
+print(reward, done, info)
+plt.figure()
+plt.imshow(img)
+```
+
+### 7.4. Creating an AI agent to learn on the custom environment
+
+The final notebook trains a DQN agent using Keras-RL2 to play our custom game Snake:
+
+`05_3_DQN_CustomEnvironments_Snake_Training_Agent.ipynb`
+
+Prior to executing this notebook, the previous two and the game folder structure `snake/` must have been correctly created.
+
+This nobetook is basically a modification of the notebook `04_2_DQN_Images_Keras_RL2_Breakout.ipynb`; the main modification is that we create an instance of our game environment Snake, instead of Breakout.

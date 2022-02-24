@@ -1,0 +1,5 @@
+snake_weights
+.ipynb_checkpoints
+gymsnake.egg-info
+__pycache__
+*.h5f.*

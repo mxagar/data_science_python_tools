@@ -1,1 +1,6 @@
 .ipynb_checkpoints
+*.h5
+.vscode
+.DS_Store
+*.h5f.*
+checkpoint
