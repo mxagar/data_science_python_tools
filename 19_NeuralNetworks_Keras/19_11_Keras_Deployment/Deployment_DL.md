@@ -162,7 +162,7 @@ pip freeze > requirements.txt
 web: gunicorn app:app
 ```
 
-- Create a runtime Python version file, `vim ./rungtime.txt`, with the following content
+- Create a runtime Python version file, `vim ./runtime.txt`, with the following content
 
 ```
 python-3.7.11
