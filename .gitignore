@@ -10,3 +10,5 @@ data/lending_club_loan_two.csv
 data/*
 example.mat
 environment.yml
+eda_fe_summary
+machine_learning_ibm
