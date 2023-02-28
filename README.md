@@ -42,5 +42,10 @@ pip install -r requirements.txt
 
 Then, you open the notebooks; if I were a beginner, I'd start sequentially.
 
+See also:
+
+- An 80/20 guide for Data Processing: Data Cleaning, Exploratory Data Analysis, Feature Engineering, Feature Selection &mdash; [eda_fe_summary](https://github.com/mxagar/eda_fe_summary).
+- My notes and the code of the IBM Machine Learning Professional Certificated offered by IBM & Coursera: [machine_learning_ibm](https://github.com/mxagar/machine_learning_ibm).
+
 Mikel Sagardia, 2018.  
 No guarantees.
